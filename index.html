@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Big Alien Venture 👽</title>
+<link rel="icon" href="images/logo.jpg">
+<style>
+*{box-sizing:border-box}
+:root{--orange:#ff5a1f;--orange2:#ff6f2d;--green:#159447;--ink:#161616;--muted:#6f6f6f;--line:#e8e8e8;--soft:#f5f5f5}
+body{margin:0;background:#f4f4f4;color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+a{color:inherit}
+#auth{min-height:100vh;background:linear-gradient(135deg,#fff8f3,#fff);display:flex;align-items:center;justify-content:center;padding:20px}
+.authbox{width:min(430px,100%);background:#fff;border:1px solid #eee;border-radius:24px;padding:28px;box-shadow:0 18px 60px #0001;text-align:center}
+.authbox img{width:95px;height:95px;border-radius:20px;object-fit:cover}.authbox h1{font-size:27px;margin:12px 0 4px}.authbox p{color:var(--muted);margin:5px 0 20px}
+.auth-tabs{display:flex;background:#f3f3f3;border-radius:12px;padding:4px;margin-bottom:16px}.auth-tabs button{flex:1;border:0;padding:11px;border-radius:9px;background:transparent}.auth-tabs .active{background:#fff;font-weight:800;box-shadow:0 1px 5px #0001}
+.field{text-align:left;margin:11px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid #d6d6d6;border-radius:10px;padding:12px;background:#fff;outline:none}.field input:focus{border-color:var(--orange)}
+.primary{background:var(--orange);color:#fff;border:0;border-radius:10px;padding:13px 18px;font-weight:800}.wide{width:100%}.secondary{background:#f1f1f1;color:#222;border:0;border-radius:9px;padding:10px 14px;font-weight:700}
+#app{min-height:100vh}.topline{background:#111;color:#fff;text-align:center;padding:6px;font-size:11px}.topline b{color:#ffbd4a}
+.header{background:#fff;position:sticky;top:0;z-index:30;border-bottom:1px solid var(--line)}.head{max-width:1200px;margin:auto;padding:10px 12px 8px;display:flex;gap:10px;align-items:center}
+.brand{display:flex;align-items:center;gap:7px;font-size:16px;font-weight:900;white-space:nowrap}.brand img{width:40px;height:40px;border-radius:9px;object-fit:cover}
+.search{height:44px;border:2px solid #171717;border-radius:25px;display:flex;align-items:center;flex:1;overflow:hidden;background:#fff}.search input{border:0;outline:0;flex:1;min-width:0;padding:0 14px;font-size:15px}.search button{height:100%;width:50px;background:#111;color:#fff;border:0;font-size:20px}
+.headicon{background:#fff;border:0;font-size:21px;position:relative;padding:7px}.badge{position:absolute;right:0;top:0;background:var(--orange);color:#fff;border-radius:20px;font-size:10px;min-width:17px;padding:2px 4px}
+.categories{background:#fff;border-bottom:1px solid var(--line);overflow:auto;white-space:nowrap}.catrow{max-width:1200px;margin:auto;display:flex;gap:24px;padding:0 12px}.catrow button{border:0;background:none;padding:11px 0 9px;font-weight:700;color:#666;position:relative}.catrow button.active{color:#111}.catrow button.active:after{content:"";position:absolute;height:4px;background:#111;border-radius:5px;left:0;right:0;bottom:0}
+.main{max-width:1200px;margin:auto;padding:8px 12px 82px}.benefits{display:grid;grid-template-columns:1fr 1fr;background:#fff7ec;border-radius:6px;margin:8px 0 10px;overflow:hidden}.benefit{padding:10px 12px}.benefit+ .benefit{border-left:1px solid #ddd}.benefit b{display:block;font-size:14px}.benefit span{font-size:11px;color:#666}.safe{background:#0c8c08;color:#fff;border-radius:5px;padding:10px 13px;margin-bottom:10px;font-weight:800}
+.hero{background:linear-gradient(110deg,#101010,#242424);color:#fff;border-radius:9px;display:flex;justify-content:space-between;align-items:center;overflow:hidden;min-height:145px}.hero-copy{padding:18px}.hero h2{font-size:26px;margin:0 0 6px}.hero p{margin:0 0 13px;color:#ddd;font-size:13px}.hero img{height:145px;width:145px;object-fit:cover}
+.section{display:flex;align-items:center;justify-content:space-between;margin:15px 0 8px}.section h2{font-size:19px;margin:0}.section span{font-size:12px;color:#777}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.card{background:#fff;overflow:hidden;border-radius:3px;position:relative}.cardimg{width:100%;aspect-ratio:1/1;object-fit:cover;background:#eee}.cardbody{padding:7px 7px 9px}.tag{display:inline-block;border:1px solid #1c963a;color:#238b3b;border-radius:3px;padding:2px 4px;font-size:9px;font-weight:800;margin-bottom:4px}.card h3{font-size:12px;line-height:1.25;margin:0 0 5px;height:30px;overflow:hidden}.stars{font-size:11px;color:#111}.sold{color:#777;font-size:10px}.price{font-size:16px;font-weight:900;margin-top:4px}.was{font-size:10px;text-decoration:line-through;color:#999}.actions{display:flex;gap:4px;margin-top:7px}.actions button{flex:1;border:0;border-radius:7px;padding:7px;font-size:10px;font-weight:800}.buy{background:var(--orange);color:#fff}.add{background:#fff0e9;color:var(--orange)}
+.page{background:#f4f4f4}.panel{background:#fff;border-radius:10px;padding:16px;margin:10px 0;border:1px solid #eee}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.order{background:#fff;border-radius:10px;padding:14px;margin:9px 0;border:1px solid #eee}.timeline{display:flex;justify-content:space-between;gap:0;margin:18px 0;position:relative}.timeline:before{content:"";position:absolute;top:13px;left:8%;right:8%;height:3px;background:#ddd}.step{z-index:1;text-align:center;width:16%;font-size:9px;color:#777}.dot{width:27px;height:27px;background:#ddd;border-radius:50%;display:grid;place-items:center;margin:auto auto 4px;font-weight:900}.step.done .dot{background:var(--orange);color:#fff}.step.current .dot{box-shadow:0 0 0 4px #ffd5c5}.trackbox{border:1px solid #eee;border-radius:12px;padding:14px;background:#fff}.tracking{font-size:12px;color:#666}.history{margin-top:12px}.hist{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #eee;font-size:12px}.histdot{width:9px;height:9px;background:var(--orange);border-radius:50%;margin-top:5px;flex:none}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ddd;z-index:40;display:none}.bottomrow{display:flex;justify-content:space-around}.bottom button{background:#fff;border:0;padding:8px 4px 10px;font-size:11px;font-weight:700;color:#333}.bottom .selected{color:var(--orange)}.bottom .emoji{display:block;font-size:20px;line-height:20px}
+.modal{position:fixed;inset:0;background:#0008;z-index:80;display:grid;place-items:center;padding:14px}.modalbox{background:#fff;border-radius:16px;padding:18px;width:min(600px,100%);max-height:92vh;overflow:auto}.close{float:right;border:0;border-radius:50%;width:30px;height:30px}
+.admin{background:#fff8f4;border:1px solid #ffd4c0}
+@media(max-width:700px){.head{flex-wrap:wrap}.brand{width:100%}.search{order:3;width:100%}.grid{grid-template-columns:repeat(2,1fr)}.main{padding-left:7px;padding-right:7px}.bottom{display:block}.hero img{width:110px;height:110px}.hero h2{font-size:22px}.catrow{gap:22px}.timeline{overflow:auto;justify-content:flex-start}.step{min-width:85px}.timeline:before{display:none}}
+@media(min-width:701px){.grid{grid-template-columns:repeat(5,1fr)}}
+</style>
+</head>
+<body>
+<div id="auth">
+  <div class="authbox">
+    <img src="images/logo.jpg" alt="Big Alien Enterprise">
+    <h1>Big Alien Venture 👽</h1>
+    <p>Sign in to shop and track your orders.</p>
+    <div class="auth-tabs"><button id="loginTab" class="active" onclick="authMode('login')">Sign in</button><button id="regTab" onclick="authMode('register')">Create account</button></div>
+    <div id="authMsg"></div>
+    <div class="field"><label>Email</label><input id="email" type="email" placeholder="Email"></div>
+    <div class="field"><label>Password</label><input id="pass" type="password" placeholder="Password"></div>
+    <div id="regFields" class="hidden"><div class="field"><label>Full name</label><input id="name" placeholder="Full name"></div><div class="field"><label>Phone</label><input id="phone" placeholder="Phone number"></div></div>
+    <button id="authBtn" class="primary wide" onclick="submitAuth()">Sign in</button>
+    <p style="font-size:11px">Customer service: <a href="https://wa.me/2347025136166" target="_blank">WhatsApp 07025136166</a></p><div style="margin-top:12px"><button class="secondary wide" onclick="showOwnerLogin()">👑 Owner / Admin</button></div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="topline">🔥 Welcome to <b>Big Alien Venture 👽</b> · Customer service: <b>07025136166</b></div>
+  <header class="header">
+    <div class="head">
+      <div class="brand"><img src="images/logo.jpg" alt="">BIG ALIEN</div>
+      <div class="search"><input id="search" placeholder="Search products..." oninput="renderProducts()"><button onclick="renderProducts()">⌕</button></div>
+      <button class="headicon" onclick="go('cart')">🛒<span id="cartBadge" class="badge">0</span></button>
+      <button class="headicon" onclick="go('profile')">👤</button>
+    </div>
+    <div class="categories"><div class="catrow" id="catRow"></div></div>
+  </header>
+
+  <main class="main">
+    <section id="home" class="page">
+      <div class="benefits"><div class="benefit"><b>✓ Free shipping</b><span>Available on selected orders</span></div><div class="benefit"><b>◉ Price adjustment</b><span>Ask customer service</span></div></div>
+      <div class="safe">🛡 Safe payments · Secure privacy <span style="float:right">›</span></div>
+      <div class="hero"><div class="hero-copy"><h2>Shop smart with Big Alien</h2><p>Solar power, electronics and everyday products.</p><button class="primary" onclick="document.getElementById('productGrid').scrollIntoView({behavior:'smooth'})">Shop now</button></div><img src="images/logo.jpg" alt=""></div>
+      <div class="section"><h2>Recommended for you</h2><span>See all</span></div>
+      <div id="productGrid" class="grid"></div>
+    </section>
+
+    <section id="categoriesPage" class="page hidden"><div class="panel"><h2>Categories</h2><div id="categoryList"></div></div></section>
+    <section id="cart" class="page hidden"><div class="section"><h2>Cart</h2></div><div id="cartList"></div></section>
+    <section id="orders" class="page hidden"><div class="section"><h2>My Orders</h2></div><div id="ordersList"></div></section>
+    <section id="profile" class="page hidden"><div class="panel"><h2>Profile</h2><div class="field"><label>Full name</label><input id="profName"></div><div class="field"><label>Phone</label><input id="profPhone"></div><div class="field"><label>Email</label><input id="profEmail" disabled></div><div class="field"><label>Delivery address</label><textarea id="profAddress" rows="3"></textarea></div><button class="primary" onclick="saveProfile()">Save profile</button></div><div class="panel"><h3>Settings</h3><button class="secondary" onclick="changePassword()">Change password</button> <button class="secondary" onclick="showOwnerLogin()">👑 Owner / Admin</button> <button class="secondary" onclick="logout()">Sign out</button></div></section>
+    <section id="support" class="page hidden"><div class="panel"><h2>Customer Service</h2><p>WhatsApp: <b>07025136166</b></p><a class="primary" style="display:inline-block;text-decoration:none" target="_blank" href="https://wa.me/2347025136166">Chat on WhatsApp</a></div></section>
+    <section id="owner" class="page hidden"><div class="panel admin"><h2>Owner</h2><div id="ownerLogin"><div class="field"><label>Owner email</label><input id="oe" type="email"></div><div class="field"><label>Owner password</label><input id="op" type="password"></div><button class="primary" onclick="ownerLogin()">Owner sign in</button> <button class="secondary" onclick="ownerSetup()">First-time setup</button><div id="ownerMsg"></div></div><div id="ownerDash" class="hidden"><div class="row"><h3>Product manager</h3><button class="secondary" onclick="ownerLogout()">Sign out</button></div><form onsubmit="saveProduct(event)" class="panel"><input id="editId" type="hidden"><div class="field"><label>Product name</label><input id="pName" required></div><div class="field"><label>Price</label><input id="pPrice" type="number" required></div><div class="field"><label>Category</label><select id="pCat"><option>Solar</option><option>Electronics</option><option>Clothing</option><option>Food</option><option>Other</option></select></div><div class="field"><label>Product picture</label><input id="pImg" type="file" accept="image/*"></div><div class="field"><label>Description</label><textarea id="pDesc"></textarea></div><button class="primary">Save product</button></form><div id="ownerProducts"></div><h3>Orders & shipping</h3><div id="ownerOrders"></div></div></div></section>
+  </main>
+
+  <nav class="bottom"><div class="bottomrow">
+    <button class="selected" onclick="go('home')"><span class="emoji">⌂</span>Home</button>
+    <button onclick="go('categoriesPage')"><span class="emoji">☷</span>Categories</button>
+    <button onclick="go('orders')"><span class="emoji">♙</span>You</button>
+    <button onclick="go('cart')"><span class="emoji">🛒</span>Cart</button>
+    <button onclick="go('support')"><span class="emoji">💬</span>Help</button>
+  </div></nav>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">×</button><div id="modalBody"></div></div></div><div id="ownerModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="document.getElementById('ownerModal').classList.add('hidden')">×</button><h2>👑 Owner / Admin</h2><p class="muted">Only the store owner should use this area.</p><div class="field"><label>Owner email</label><input id="loginOwnerEmail" type="email"></div><div class="field"><label>Owner password</label><input id="loginOwnerPass" type="password"></div><button class="primary wide" onclick="ownerAccess()">Owner sign in</button><button class="secondary wide" style="margin-top:8px" onclick="ownerSetupFromLogin()">First-time owner setup</button><div id="ownerLoginMsg" style="margin-top:10px"></div></div></div>
+
+<script>
+const seed=[
+{id:'s1',name:'Sarkin Solar Power Unit',price:360000,cat:'Solar',desc:'Solar power equipment.',img:'images/solar-inverter.jpg'},
+{id:'s2',name:'Solar Panel',price:200000,cat:'Solar',desc:'Solar panel.',img:'images/solar-panel.jpg'},
+{id:'s3',name:'Solar System 800W / 500W',price:300000,cat:'Solar',desc:'Solar system.',img:''},
+{id:'s4',name:'Solar System 650W',price:200000,cat:'Solar',desc:'Solar system.',img:''},
+{id:'s5',name:'Solar System 350W',price:170000,cat:'Solar',desc:'Solar system.',img:''},
+{id:'s6',name:'Chicken — Standard',price:15000,cat:'Food',desc:'Standard chicken.',img:''},
+{id:'s7',name:'Chicken — Premium',price:20000,cat:'Food',desc:'Premium chicken.',img:''},
+{id:'s8',name:'Men’s Shirt',price:15000,cat:'Men',desc:'Men’s shirt.',img:''},
+{id:'s9',name:'Men’s Wear — Premium',price:20000,cat:'Men',desc:'Premium men’s wear.',img:''},
+{id:'s10',name:'Orimo Power Bank',price:22000,cat:'Electronics',desc:'Portable power bank.',img:''}
+];
+const get=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}},put=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+let products=get('bav_market_products',seed),users=get('bav_market_users',[]),orders=get('bav_market_orders',[]),cart=get('bav_market_cart',[]),current=get('bav_market_current',null),owner=get('bav_market_owner_session',false),mode='login',cat='';
+const money=n=>'₦'+Number(n).toLocaleString('en-NG'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function authMode(m){mode=m;loginTab.classList.toggle('active',m==='login');regTab.classList.toggle('active',m==='register');regFields.classList.toggle('hidden',m!=='register');authBtn.textContent=m==='login'?'Sign in':'Create account'}
+function authMsg(t,ok=false){document.getElementById('authMsg').innerHTML='<div style="padding:9px;background:'+(ok?'#ecfdf3':'#fff1f1')+';border-radius:9px">'+esc(t)+'</div>'}
+function submitAuth(){const e=document.getElementById('email').value.trim().toLowerCase();const p=document.getElementById('pass').value;if(!e||!p)return authMsg('Enter your email and password.');if(mode==='register'){const n=document.getElementById('name').value.trim();const ph=document.getElementById('phone').value.trim();if(!n||p.length<6)return authMsg('Enter your name and use a password of at least 6 characters.');if(users.some(u=>u.email===e))return authMsg('That account already exists. Try Sign in instead.');users.push({email:e,password:p,name:n,phone:ph,address:''});put('bav_market_users',users);current=e;put('bav_market_current',current);openApp()}else{if(!users.some(u=>u.email===e&&u.password===p))return authMsg('Incorrect email or password. If this is your first visit, choose Create account first.');current=e;put('bav_market_current',current);openApp()}}
+function openApp(){document.getElementById('auth').classList.add('hidden');document.getElementById('app').classList.remove('hidden');renderCategories();renderProducts();renderBadge();go('home')}
+function logout(){current=null;put('bav_market_current',null);document.getElementById('app').classList.add('hidden');document.getElementById('auth').classList.remove('hidden')}
+function go(id){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');if(id==='orders')renderOrders();if(id==='cart')renderCart();if(id==='profile')loadProfile();if(id==='owner')renderOwner();window.scrollTo(0,0)}
+function renderCategories(){let cs=[...new Set(products.map(p=>p.cat))];catRow.innerHTML='<button class="'+(!cat?'active':'')+'" onclick="chooseCat(\'\')">All</button>'+cs.map(c=>`<button class="${cat===c?'active':''}" onclick="chooseCat('${esc(c)}')">${esc(c)}</button>`).join('');categoryList.innerHTML=cs.map(c=>`<button class="secondary" style="margin:4px" onclick="chooseCat('${esc(c)}');go('home')">${esc(c)}</button>`).join('')}
+function chooseCat(c){cat=c;renderCategories();renderProducts()}
+function renderProducts(){let q=(search.value||'').toLowerCase();let list=products.filter(p=>(!cat||p.cat===cat)&&(p.name+' '+p.desc).toLowerCase().includes(q));productGrid.innerHTML=list.map(card).join('')||'<div class="panel">No products found.</div>'}
+function card(p){return `<article class="card"><img class="cardimg" src="${esc(p.img||'')}" onerror="this.style.display='none'" alt="${esc(p.name)}"><div class="cardbody">${p.img?'':'<div style="aspect-ratio:1;background:#eee;display:grid;place-items:center;font-size:45px">👽</div>'}<span class="tag">Local warehouse</span><h3>${esc(p.name)}</h3><div class="stars">★★★★★ <span class="sold">New</span></div><div class="price">${money(p.price)}</div><div class="sold">Available now</div><div class="actions"><button class="buy" onclick="buy('${esc(p.id)}')">Buy now</button><button class="add" onclick="add('${esc(p.id)}')">🛒</button></div></div></article>`}
+function add(id){let x=cart.find(a=>a.id===id);if(x)x.qty++;else cart.push({id,qty:1});put('bav_market_cart',cart);renderBadge()}
+function buy(id){cart=[{id,qty:1}];put('bav_market_cart',cart);checkout()}
+function renderBadge(){cartBadge.textContent=cart.reduce((s,x)=>s+x.qty,0)}
+function renderCart(){if(!cart.length){cartList.innerHTML='<div class="panel">Your cart is empty.</div>';return}let total=0;cartList.innerHTML=cart.map(x=>{let p=products.find(y=>y.id===x.id);if(!p)return '';total+=p.price*x.qty;return `<div class="panel"><div class="row"><b>${esc(p.name)}</b><span>${money(p.price)} × ${x.qty}</span></div></div>`}).join('')+`<div class="panel"><div class="row"><b>Total</b><b>${money(total)}</b></div><button class="primary wide" onclick="checkout()">Checkout</button></div>`}
+function checkout(){if(!cart.length)return;let total=cart.reduce((s,x)=>s+(products.find(p=>p.id===x.id)?.price||0)*x.qty,0);modalBody.innerHTML=`<h2>Checkout</h2><p>Total: <b>${money(total)}</b></p><div class="field"><label>Delivery address</label><textarea id="addr" rows="3"></textarea></div><div class="field"><label>Payment</label><select id="pm" onchange="payInfo()"><option value="bank">Bank transfer</option><option value="pod">Pay on delivery</option></select></div><div id="pay" style="background:#fff7ed;padding:12px;border-radius:10px">Account name: <b>Abel Philip</b><br>Account number: <b>6714306196</b><br>Bank: <b>Moniepoint MFB</b><br><br>Transfer the exact total, then confirm below.<br><label><input id="paidCheck" type="checkbox"> I have made the transfer.</label></div><button class="primary wide" onclick="placeOrder()">Place order</button>`;modal.classList.remove('hidden')}
+function payInfo(){pay.innerHTML=pm.value==='bank'?`Account name: <b>Abel Philip</b><br>Account number: <b>6714306196</b><br>Bank: <b>Moniepoint MFB</b><br><br><label><input id="paidCheck" type="checkbox"> I have made the transfer.</label>`:'<b>Pay on delivery</b><br>Pay the delivery agent when your order arrives.'}
+function placeOrder(){let address=addr.value.trim();if(!address)return alert('Enter your delivery address.');if(pm.value==='bank'&&!paidCheck?.checked)return alert('Please make the bank transfer and confirm it.');let now=new Date(),items=cart.map(x=>{let p=products.find(y=>y.id===x.id);return {id:p.id,name:p.name,price:p.price,qty:x.qty}}),total=items.reduce((s,i)=>s+i.price*i.qty,0);let id='BAV'+Date.now().toString().slice(-8);orders.unshift({id,email:current,address,items,total,paid:false,status:'Order placed',tracking:'BAV-TRK-'+Math.random().toString(36).slice(2,8).toUpperCase(),eta:new Date(Date.now()+5*86400000).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}),created:now.toLocaleString(),history:[{status:'Order placed',time:now.toLocaleString()}]});put('bav_market_orders',orders);cart=[];put('bav_market_cart',cart);modal.classList.add('hidden');renderBadge();go('orders')}
+const stages=['Order placed','Payment confirmed','Processing','Shipped','Out for delivery','Delivered'];
+function track(o){let i=stages.indexOf(o.status);if(i<0)i=0;return `<div class="trackbox"><div class="row"><div><b>🚚 Shipment tracking</b><div class="tracking">Tracking: <b>${esc(o.tracking)}</b></div></div><b style="color:var(--orange)">${esc(o.status)}</b></div><div class="timeline">${stages.map((s,n)=>`<div class="step ${n<=i?'done':''} ${n===i?'current':''}"><div class="dot">${n<=i?'✓':''}</div>${s}</div>`).join('')}</div><div style="background:#fff7ed;padding:10px;border-radius:9px"><b>Estimated delivery</b><br>${esc(o.eta)}</div><div class="history"><b>Shipment updates</b>${(o.history||[]).slice().reverse().map(h=>`<div class="hist"><span class="histdot"></span><div><b>${esc(h.status)}</b><br><span class="muted">${esc(h.time)}</span></div></div>`).join('')}</div></div>`}
+function renderOrders(){let os=orders.filter(o=>o.email===current);ordersList.innerHTML=os.length?os.map(o=>`<div class="order"><div class="row"><b>Order ${esc(o.id)}</b><span class="muted">${esc(o.created)}</span></div><p>${o.items.map(i=>esc(i.name)+' × '+i.qty).join(', ')}</p><p><b>${money(o.total)}</b> · Payment: ${o.paid?'Confirmed':'Awaiting confirmation'}</p>${track(o)}<p class="muted">Delivery address: ${esc(o.address)}</p></div>`).join(''):'<div class="panel">No orders yet.</div>'}
+function loadProfile(){let u=users.find(x=>x.email===current);if(!u)return;profName.value=u.name||'';profPhone.value=u.phone||'';profEmail.value=u.email;profAddress.value=u.address||''}
+function saveProfile(){let u=users.find(x=>x.email===current);u.name=profName.value;u.phone=profPhone.value;u.address=profAddress.value;put('bav_market_users',users);alert('Profile saved')}
+function changePassword(){let p=prompt('New password (minimum 6 characters):');if(p&&p.length>=6){users.find(x=>x.email===current).password=p;put('bav_market_users',users);alert('Password changed')}}
+function showOwnerLogin(){document.getElementById('ownerModal').classList.remove('hidden')}
+function ownerAccess(){const c=get('bav_market_owner',null),e=document.getElementById('loginOwnerEmail').value.trim().toLowerCase(),p=document.getElementById('loginOwnerPass').value;if(!c)return document.getElementById('ownerLoginMsg').textContent='No owner account is set up yet. Tap First-time owner setup.';if(c.email!==e||c.password!==p)return document.getElementById('ownerLoginMsg').textContent='Owner email or password is incorrect.';owner=true;put('bav_market_owner_session',true);document.getElementById('ownerModal').classList.add('hidden');openApp();go('owner')}
+function ownerSetupFromLogin(){const e=document.getElementById('loginOwnerEmail').value.trim().toLowerCase(),p=document.getElementById('loginOwnerPass').value;if(!e||p.length<10)return document.getElementById('ownerLoginMsg').textContent='Enter an owner email and password of at least 10 characters.';if(get('bav_market_owner',null))return document.getElementById('ownerLoginMsg').textContent='Owner setup is already complete on this browser.';put('bav_market_owner',{email:e,password:p});owner=true;put('bav_market_owner_session',true);document.getElementById('ownerModal').classList.add('hidden');openApp();go('owner')}
+function ownerSetup(){let e=oe.value.trim().toLowerCase(),p=op.value;if(!e||p.length<10)return ownerMsg.textContent='Use an email and a password of at least 10 characters.';if(localStorage.getItem('bav_market_owner'))return ownerMsg.textContent='Owner setup already completed on this browser.';put('bav_market_owner',{email:e,password:p});owner=true;put('bav_market_owner_session',true);renderOwner()}
+function ownerLogin(){let c=get('bav_market_owner',null);if(!c)return ownerMsg.textContent='Complete first-time setup.';if(c.email!==oe.value.trim().toLowerCase()||c.password!==op.value)return ownerMsg.textContent='Owner login failed.';owner=true;put('bav_market_owner_session',true);renderOwner()}
+function ownerLogout(){owner=false;put('bav_market_owner_session',false);renderOwner()}
+function renderOwner(){if(!owner){ownerLogin.classList.remove('hidden');ownerDash.classList.add('hidden');return}ownerLogin.classList.add('hidden');ownerDash.classList.remove('hidden');ownerProducts.innerHTML=products.map(p=>`<div class="order"><div class="row"><div style="display:flex;align-items:center;gap:8px">${p.img?`<img src="${esc(p.img)}" style="width:55px;height:55px;object-fit:cover;border-radius:7px">`:''}<span><b>${esc(p.name)}</b><br>${money(p.price)}</span></div><span><button class="secondary" onclick="editProduct('${p.id}')">Edit</button> <button class="secondary" onclick="delProduct('${p.id}')">Delete</button></span></div></div>`).join('');ownerOrders.innerHTML=orders.map(o=>`<div class="order"><b>${esc(o.id)}</b> · ${esc(o.email)}<p>${o.items.map(i=>esc(i.name)+' × '+i.qty).join(', ')} · ${money(o.total)}</p><label><input type="checkbox" ${o.paid?'checked':''} onchange="paid('${o.id}',this.checked)"> Payment confirmed</label><div class="field"><label>Shipment status</label><select id="st-${o.id}">${stages.map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select></div><button class="primary" onclick="updateStatus('${o.id}')">Update customer shipment</button></div>`).join('')||'<div class="panel">No orders.</div>'}
+function saveProduct(e){e.preventDefault();let id=editId.value||'p'+Date.now(),old=products.find(p=>p.id===id),file=pImg.files[0],p={id,name:pName.value.trim(),price:Number(pPrice.value),cat:pCat.value,desc:pDesc.value.trim(),img:old?.img||''};if(file){let r=new FileReader();r.onload=()=>{p.img=r.result;finish(p)};r.readAsDataURL(file)}else finish(p)}
+function finish(p){let i=products.findIndex(x=>x.id===p.id);if(i>=0)products[i]=p;else products.unshift(p);put('bav_market_products',products);clearProduct();renderProducts();renderCategories();renderOwner()}
+function editProduct(id){let p=products.find(x=>x.id===id);editId.value=p.id;pName.value=p.name;pPrice.value=p.price;pCat.value=p.cat;pDesc.value=p.desc}
+function delProduct(id){if(confirm('Delete product?')){products=products.filter(p=>p.id!==id);put('bav_market_products',products);renderProducts();renderOwner()}}
+function clearProduct(){editId.value='';pName.value='';pPrice.value='';pDesc.value='';pImg.value=''}
+function paid(id,v){let o=orders.find(x=>x.id===id);o.paid=v;if(v&&o.status==='Order placed'){o.status='Payment confirmed';o.history.push({status:o.status,time:new Date().toLocaleString()})}put('bav_market_orders',orders);renderOwner()}
+function updateStatus(id){let o=orders.find(x=>x.id===id),s=document.getElementById('st-'+id).value;if(o.status!==s){o.status=s;o.history=o.history||[];o.history.push({status:s,time:new Date().toLocaleString()});if(s==='Delivered')o.eta=new Date().toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'})}put('bav_market_orders',orders);renderOwner();alert('Customer shipment updated.')}
+function closeModal(){modal.classList.add('hidden')}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===modal)closeModal()});
+if(current)openApp();
+</script>
+</body>
+</html>
