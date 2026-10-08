@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111111">
   <title>Big Alien Venture 👽</title>
   <link rel="icon" href="images/logo.jpg">
-  <link rel="stylesheet" href="styles.css"> 
   <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <header class="top">
@@ -16,9 +17,9 @@
       <img src="images/logo.jpg" alt="Big Alien Venture logo">
       <span>BIG ALIEN</span>
     </a>
-    <div class="search"><input id="search" placeholder="Search products…"><button id="searchBtn">⌕</button></div>
-    <button class="iconBtn" id="cartBtn">🛒 <span id="cartCount">0</span></button>
-    <button class="iconBtn" id="accountBtn">👤</button>
+    <div class="search"><input id="search" placeholder="Search products…"><button id="searchBtn" aria-label="Search">⌕</button></div>
+    <button class="iconBtn" id="cartBtn" aria-label="Cart">🛒 <span id="cartCount">0</span></button>
+    <button class="iconBtn" id="accountBtn" aria-label="Account">👤</button>
   </div>
   <nav class="cats" id="categories"></nav>
 </header>
@@ -48,10 +49,59 @@
   </section>
 
   <section id="homeView" class="hidden">
-    <div class="hero"><div><h1>Shop smart with Big Alien Venture 👽</h1><p>Solar · Food · Men's wear · Electronics</p></div><a href="https://wa.me/2347025136166" class="whatsapp">WhatsApp Customer Service</a></div>
-    <div class="strips"><span>🚚 Reliable delivery</span><span>💳 Safe payment</span><span>🛡️ Secure accounts</span></div>
-    <div class="sectionHead"><h2 id="shopTitle">All Products</h2><span id="resultCount"></span></div>
-    <div id="productGrid" class="grid"></div>
+    <div class="homeShell">
+      <section class="marketHero">
+        <div class="heroCopy">
+          <span class="eyebrow">BIG ALIEN MARKETPLACE 👽</span>
+          <h1>Shop more. Save more. Get it delivered.</h1>
+          <p>Discover solar power, electronics, fashion, food and more from Big Alien Venture.</p>
+          <div class="heroActions">
+            <button class="primary" data-view="home">Shop Now</button>
+            <a class="whatsapp" href="https://wa.me/2347025136166">💬 Customer Service</a>
+          </div>
+        </div>
+        <div class="heroBadge"><span>🔥</span><b>Hot Deals</b><small>New offers added by Big Alien</small></div>
+      </section>
+
+      <div class="quickBenefits">
+        <div><b>🚚 Reliable delivery</b><span>Track your order</span></div>
+        <div><b>💳 Safe payment</b><span>Secure checkout</span></div>
+        <div><b>🛡️ Buyer confidence</b><span>Order support</span></div>
+      </div>
+
+      <section class="quickSection">
+        <div class="sectionTitle"><div><span class="eyebrow dark">SHOP BY CATEGORY</span><h2>Find what you need</h2></div><span class="miniHint">Tap a category</span></div>
+        <div class="categoryTiles">
+          <button data-cat="Solar"><span>☀️</span><b>Solar</b><small>Power & panels</small></button>
+          <button data-cat="Electronics"><span>📱</span><b>Electronics</b><small>Smart essentials</small></button>
+          <button data-cat="Men"><span>👕</span><b>Men</b><small>Fashion picks</small></button>
+          <button data-cat="Food"><span>🍲</span><b>Food</b><small>Everyday goods</small></button>
+          <button data-cat="All"><span>✨</span><b>All Products</b><small>Shop everything</small></button>
+        </div>
+      </section>
+
+      <section class="dealBanner">
+        <div><span class="eyebrow">BIG ALIEN DEALS</span><h2>Fresh products. Great prices.</h2><p>Check the marketplace for the latest stock and offers.</p></div>
+        <div class="dealPills"><span>⚡ New arrivals</span><span>💥 Hot picks</span><span>📦 Ready to order</span></div>
+      </section>
+
+      <section class="trackingBanner">
+        <div class="trackingIcon">📦</div>
+        <div class="trackingCopy"><span class="eyebrow dark">ORDER & DELIVERY</span><h2>Track your shipment</h2><p>See payment status, tracking number and every shipment update from Big Alien.</p></div>
+        <button class="secondary" type="button" onclick="show('ordersView');loadOrders()">View My Orders</button>
+      </section>
+
+      <section class="productSection">
+        <div class="sectionHead"><div><span class="eyebrow dark">SHOPPING FOR YOU</span><h2 id="shopTitle">All Products</h2></div><span id="resultCount"></span></div>
+        <div id="productGrid" class="grid"></div>
+      </section>
+
+      <section class="serviceRow">
+        <div><b>💬 Need help?</b><span>Chat with Big Alien customer service</span><a href="https://wa.me/2347025136166">07025136166 on WhatsApp</a></div>
+        <div><b>🔒 Secure account</b><span>Your customer account stays protected</span></div>
+        <div><b>🚚 Shipment updates</b><span>Follow your order from processing to delivery</span></div>
+      </section>
+    </div>
   </section>
 
   <section id="productView" class="hidden"></section>
@@ -78,7 +128,7 @@
   </section>
 
   <section id="ordersView" class="hidden">
-    <div class="sectionHead"><h2>My Orders</h2></div>
+    <div class="sectionHead"><div><span class="eyebrow dark">DELIVERY CENTER</span><h2>My Orders & Shipment Tracking</h2></div></div>
     <div id="ordersList"></div>
   </section>
 
@@ -88,7 +138,6 @@
       <label>Full name<input id="profileName" required></label>
       <label>Phone<input id="profilePhone" required></label>
       <button class="primary" type="submit">Save Profile</button>
-      <button class="primary hidden" id="adminBtn" type="button">👑 Owner / Admin Dashboard</button>
       <button class="secondary" id="logoutBtn" type="button">Logout</button>
       <div id="profileMsg" class="msg"></div>
     </form>
@@ -96,17 +145,18 @@
 
   <section id="adminView" class="hidden">
     <div class="adminHead"><div><h1>👑 Big Alien Admin</h1><p>Manage products, orders, payments and shipment updates.</p></div><button class="secondary" id="adminLogout">Exit Admin</button></div>
-    <div class="adminTabs">
-      <button class="active" data-admin-tab="products">Products</button>
-      <button data-admin-tab="orders">Orders</button>
-    </div>
-    <div id="adminProductsTab">
-      <div class="adminActions"><button class="primary" id="addProductBtn">➕ Add Product</button></div>
-      <div id="adminProducts"></div>
-    </div>
+    <div class="adminTabs"><button class="active" data-admin-tab="products">Products</button><button data-admin-tab="orders">Orders</button></div>
+    <div id="adminProductsTab"><div class="adminActions"><button class="primary" id="addProductBtn">➕ Add Product</button></div><div id="adminProducts"></div></div>
     <div id="adminOrdersTab" class="hidden"><div id="adminOrders"></div></div>
   </section>
 </main>
+
+<nav class="bottomNav" aria-label="Main navigation">
+  <button type="button" data-view="home"><span>🏠</span><small>Home</small></button>
+  <button type="button" onclick="show('ordersView');loadOrders()"><span>📦</span><small>Orders</small></button>
+  <button type="button" id="cartBtnBottom"><span>🛒</span><small>Cart</small></button>
+  <button type="button" id="accountBtnBottom"><span>👤</span><small>Account</small></button>
+</nav>
 
 <div id="productModal" class="modal hidden"><div class="modalCard"><button class="close" data-close="productModal">×</button><h2 id="productModalTitle">Add Product</h2>
   <form id="productForm">
@@ -128,5 +178,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="app.js"></script>
+<script>
+  document.addEventListener('click',function(e){
+    if(e.target.closest('#cartBtnBottom')){document.getElementById('cartBtn').click()}
+    if(e.target.closest('#accountBtnBottom')){document.getElementById('accountBtn').click()}
+  });
+</script>
 </body>
 </html>
