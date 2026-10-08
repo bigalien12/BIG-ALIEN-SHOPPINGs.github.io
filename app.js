@@ -35,6 +35,6 @@ $("searchBtn").onclick=()=>{query=$("search").value;show("homeView");renderProdu
 $("checkoutForm").onsubmit=submitOrder;
 $("profileForm").onsubmit=async e=>{e.preventDefault();let {error}=await sb.from("profiles").update({full_name:$("profileName").value.trim(),phone:$("profilePhone").value.trim()}).eq("id",user.id);msg("profileMsg",error?.message||"Profile saved.",!error);if(!error)loadProfile()};
 $("logoutBtn").onclick=()=>sb.auth.signOut();$("productForm").onsubmit=saveProduct;.onclick=()=>sb.auth.signOut();$("addProductBtn").onclick=()=>openProductModal();$("adminLogout").onclick=()=>show("homeView");
-document.querySelector(".brand").addEventListener("click",e=>{e.preventDefault();show("homeView")});
-$("logoutBtn").onclick=()=>sb.auth.signOut();$("productForm").onsubmit=saveProduct;$("addProductBtn").onclick=()=>openProductModal();$("adminLogout").onclick=()=>show("homeView");
+
+$("logoutBtn").onclick=()=>sb.auth.signOut();$("productForm").onsubmit=saveProduct;$("addProductBtn").onclick=>openProductModal();$("adminLogout").onclick=()=>show("homeView");
 saveCart();init();
