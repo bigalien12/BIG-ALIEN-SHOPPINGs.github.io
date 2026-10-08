@@ -1,0 +1,1 @@
+document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('adminBtn');if(b)b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();location.href='admin.html';},true);});
