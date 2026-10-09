@@ -31,6 +31,7 @@ function show(id) {
     "account-area",
     [
       "profileView",
+      "customerInboxView",
       "accountManagementView",
       "reviewsView",
       "supportView",
@@ -46,6 +47,7 @@ function show(id) {
     "ordersView",
     "wishlistView",
     "profileView",
+    "customerInboxView",
     "accountManagementView",
     "reviewsView",
     "supportView",
@@ -66,6 +68,7 @@ function show(id) {
         (id === "homeView" && button.dataset.view === "home") ||
           ([
             "profileView",
+            "customerInboxView",
             "accountManagementView",
             "reviewsView",
             "supportView",
@@ -112,7 +115,7 @@ function toggleWishlist(id) {
   renderWishlist();
 }
 function imageOrFallback(url) {
-  return url || "images/solar-panel.jpg";
+  return url || "images/logo.png";
 }
 function renderCats() {
   let cats = ["All", ...new Set(products.map((p) => p.category))];
@@ -513,6 +516,28 @@ async function loadCustomerNotifications() {
     .join("");
 }
 
+async function loadCustomerInbox() {
+  const box = $("customerInboxMessages");
+  if (!box || !sb || !user) return;
+  const { data, error } = await sb
+    .from("notifications")
+    .select("id,title,message,type,order_id,read_at,created_at")
+    .eq("recipient_user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) {
+    box.innerHTML = `<p class="notificationEmpty">Inbox is not available yet. Please check that the notifications database migration has been applied. ${esc(error.message)}</p>`;
+    return;
+  }
+  if (!data?.length) {
+    box.innerHTML = `<p class="notificationEmpty">Your inbox is empty. Order and shipment messages from the store will appear here.</p>`;
+    return;
+  }
+  box.innerHTML = data.map((n) =>
+    `<article class="notificationItem ${n.read_at ? "" : "unread"}"><span aria-hidden="true">${n.type === "shipment_update" ? "📦" : "🔔"}</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc(n.message)}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>`}</article>`
+  ).join("");
+}
+
 async function loadAdminNotifications() {
   const box = $("adminNotifications");
   if (!box || !sb || !user) return;
@@ -548,6 +573,7 @@ async function markNotificationRead(id) {
     .eq("recipient_user_id", user.id);
   if (error) return alert(error.message);
   await loadCustomerNotifications();
+  await loadCustomerInbox();
   await loadAdminNotifications();
 }
 
@@ -734,6 +760,7 @@ async function init() {
         const n = payload.new;
         if (n?.recipient_user_id === user?.id) {
           loadCustomerNotifications();
+          loadCustomerInbox();
           loadAdminNotifications();
           if ("Notification" in window && Notification.permission === "granted")
             new Notification(n.title || "Big Alien Venture", {
@@ -789,6 +816,12 @@ function bindAccountAndBottomNavigation() {
       if (action === "orders") {
         show("ordersView");
         openOrders();
+        window.scrollTo({ top: 0, behavior: "auto" });
+        return;
+      }
+      if (action === "inbox") {
+        show("customerInboxView");
+        loadCustomerInbox();
         window.scrollTo({ top: 0, behavior: "auto" });
         return;
       }
@@ -867,6 +900,10 @@ document.addEventListener("click", async (e) => {
     if (t.dataset.accountAction === "orders") {
       show("ordersView");
       openOrders();
+    }
+    if (t.dataset.accountAction === "inbox") {
+      show("customerInboxView");
+      loadCustomerInbox();
     }
     if (t.dataset.accountAction === "management")
       $("accountManagementPanel").classList.remove("hidden");
@@ -957,6 +994,23 @@ $("loginForm").onsubmit = async (e) => {
   });
   if (error) msg("authMsg", error.message);
 };
+async function signInWithGoogle() {
+  if (!sb) {
+    msg("authMsg", "Google sign-in is unavailable until Supabase is configured.");
+    return;
+  }
+  const button = $("googleAuthBtn");
+  if (button) { button.disabled = true; button.textContent = "Connecting to Google…"; }
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if (error) {
+    msg("authMsg", error.message);
+    if (button) { button.disabled = false; button.innerHTML = '<span class="googleG" aria-hidden="true">G</span> Continue with Google'; }
+  }
+}
+if ($("googleAuthBtn")) $("googleAuthBtn").addEventListener("click", signInWithGoogle);
 let pendingOtpEmail = "",
   otpTimer = null;
 function startOtpTimer(seconds = 60) {
@@ -1078,7 +1132,7 @@ if ($("refreshCustomerNotifications"))
 if ($("logoutBtn")) $("logoutBtn").onclick = () => sb.auth.signOut();
 if ($("logoutMenuBtn")) $("logoutMenuBtn").onclick = () => sb.auth.signOut();
 function applyTheme(dark) {
-  document.body.classList.toggle("dark-mode", !!dark);
+  document.body.classList.toggle("dark", !!dark);
   localStorage.setItem("big_alien_dark_mode", dark ? "1" : "0");
   if ($("darkModeToggle")) $("darkModeToggle").checked = !!dark;
 }

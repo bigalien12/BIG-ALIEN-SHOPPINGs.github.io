@@ -1,15 +1,25 @@
 {
   "id": "./",
   "name": "Big Alien Venture",
-  "short_name": "BigAlienVenture",
+  "short_name": "Big Alien",
   "description": "Big Alien Venture marketplace",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#080a08",
-  "theme_color": "#080a08",
+  "theme_color": "#075bea",
   "icons": [
-    { "src": "./pwa-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "./pwa-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    {
+      "src": "./pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }

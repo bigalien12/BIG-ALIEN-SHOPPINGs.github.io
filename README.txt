@@ -1,17 +1,18 @@
-ABELSHOP UPDATED WEBSITE PACKAGE
+BIG ALIEN VENTURE — UPDATED WEBSITE PACKAGE
 
-Included:
-- index.html and app.js (customer marketplace, customer stock labels, order-status tabs)
-- styles.css (responsive blue-and-white styling)
-- admin.html, admin.js, admin.css (admin product and shipment management)
-- config.js (existing browser-safe Supabase project configuration)
-- logo assets and manifest files
+Files are arranged for the root of your GitHub Pages repository. Upload all files and the images folder, then commit directly to main.
 
-IMPORTANT:
-1. Upload the contents of this folder to the same GitHub Pages repository, replacing the matching files.
-2. Do not delete your existing Supabase database or change table policies.
-3. This package does not include a Supabase database migration; existing notifications depend on the database functions/tables already configured.
-4. Confirm images, storage bucket, and product image URLs are present in your repository/Supabase. Product cards use stored image_url values and a fallback path.
-5. Test login, signup, admin access, product editing, order placement, and notifications after deployment.
+Included updates:
+- Uses the uploaded BIG ALIEN logo at images/logo.png and correct PWA icon paths.
+- Customer Inbox is a separate button inside My Account/Settings, not inside My Orders.
+- My Orders keeps Ongoing / Delivered and Cancelled / Returned filters.
+- Google OAuth button is included on the login/create-account screen.
+- Standalone owner dashboard includes a Messages/Notifications panel. Product edit, add/delete, order/payment/shipment workflows are retained.
+- Dark mode toggle now matches the CSS class and works with the saved preference.
 
-The customer UI now displays only In Stock / Out of Stock, never the stock count. Admin stock quantities remain visible in the dashboard.
+IMPORTANT SETUP NOTES
+1. Keep config.js set to your Supabase project and publishable browser key. Never put a service_role key in browser files.
+2. To enable Google sign-in, in Supabase Authentication > Providers, enable Google and add your Google OAuth client credentials. In Supabase Authentication > URL Configuration, add your GitHub Pages site URL (https://bigalien12.github.io/big-alien-shops/) as an allowed redirect URL. Also add that URL to the Google OAuth authorized redirect configuration using the callback URL shown by Supabase.
+3. The Customer Inbox and admin notifications require the notifications table and the database policies/migration previously supplied for Big Alien Venture. If the migration has not been run, the inbox will show a setup message.
+4. Product image upload requires a public Supabase Storage bucket named product-images and the appropriate owner/admin storage policies.
+5. Google provider activation, Supabase database policies, and Google Console credentials must be completed in their respective dashboards; website code alone cannot activate those services.

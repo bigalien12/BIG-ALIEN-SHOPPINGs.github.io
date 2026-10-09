@@ -14,6 +14,7 @@
   <div class="notice">👑 <b>Big Alien Venture Admin</b> · Owner dashboard</div>
   <div class="adminNav">
     <a class="brand" href="./"><img src="images/logo.png" alt="Big Alien Venture logo"><span>BIG ALIEN ADMIN</span></a>
+    <button class="secondary" id="adminMessagesBtn" type="button">🔔 Messages <span id="adminUnreadCount" class="notificationBadge">0</span></button>
     <button class="secondary" id="backHome">← Store</button>
     <button class="secondary" id="adminLogout">Logout</button>
   </div>
@@ -23,6 +24,7 @@
   <section id="denied" class="summary hidden"><h2>Admin access required</h2><p>This page is only available to your Big Alien owner/admin account.</p><button class="primary" id="deniedLogin">Go to Store</button></section>
   <section id="adminApp" class="hidden">
     <div class="adminTitle"><div><h1>👑 Owner Dashboard</h1><p>Manage products, orders, payments and shipment updates.</p></div><button class="primary" id="addProductBtn">➕ Add Product</button></div>
+    <section id="adminMessagesPanel" class="notificationPanel hidden" aria-labelledby="adminMessagesTitle"><div class="notificationPanelHead"><h2 id="adminMessagesTitle">Admin Notifications</h2><button class="secondary" id="refreshAdminMessages" type="button">Refresh</button></div><div id="adminMessages"><p class="notificationEmpty">New orders and customer payment reports will appear here.</p></div></section>
     <div class="adminTabs"><button class="active" data-tab="products">Products</button><button data-tab="orders">Orders & Shipment</button></div>
     <section id="productsTab"><div id="adminProducts"></div></section>
     <section id="ordersTab" class="hidden"><div id="adminOrders"></div></section>

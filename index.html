@@ -46,7 +46,9 @@
         <label>Password<input id="signupPassword" type="password" minlength="6" required></label>
         <button class="primary" type="submit">Create Account</button>
       </form>
-      <div id="authMsg" class="msg"></div>
+      <div class="authDivider"><span>OR</span></div>
+      <button class="googleButton" type="button" id="googleAuthBtn"><span class="googleG" aria-hidden="true">G</span> Continue with Google</button>
+      <div id="authMsg" class="msg" aria-live="polite"></div>
       <p class="small">Owner/admin access is secured by your Supabase account role.</p>
     </div>
   </section>
@@ -98,13 +100,6 @@
 
   <section id="ordersView" class="hidden">
     <div class="sectionHead"><h2>My Orders</h2></div>
-    <section class="notificationPanel customerNotifications" aria-labelledby="customerNotificationsTitle">
-      <div class="notificationPanelHead">
-        <h3 id="customerNotificationsTitle">🔔 Order &amp; Shipment Notifications</h3>
-        <button class="secondary" type="button" id="refreshCustomerNotifications">Refresh</button>
-      </div>
-      <div id="customerNotifications"><p class="notificationEmpty">Your order and collection updates will appear here.</p></div>
-    </section>
     <div class="orderStatusTabs" role="tablist" aria-label="Order status"><button class="active" type="button" data-order-filter="ongoing">Ongoing / Delivered</button><button type="button" data-order-filter="cancelled">Cancelled / Returned</button></div><div id="ordersList"></div>
   </section>
 
@@ -119,6 +114,7 @@
     <div class="accountMenu">
       <button class="accountMenuRow" type="button" data-account-action="support"><span class="accountMenuIcon">ⓘ</span><span><b>Help &amp; Support</b><small>Call or WhatsApp customer service</small></span><span class="chevron">›</span></button>
       <button class="accountMenuRow" type="button" data-account-action="orders"><span class="accountMenuIcon">▣</span><span><b>Orders</b><small>Purchases and delivery status</small></span><span class="chevron">›</span></button>
+      <button class="accountMenuRow" type="button" data-account-action="inbox"><span class="accountMenuIcon">✉</span><span><b>Customer Inbox</b><small>Messages and shipment notifications</small></span><span class="chevron">›</span></button>
       <button class="accountMenuRow" type="button" data-account-action="reviews"><span class="accountMenuIcon">☆</span><span><b>Ratings &amp; Reviews</b><small>Share feedback about your shopping</small></span><span class="chevron">›</span></button>
       <button class="accountMenuRow" type="button" data-account-action="management"><span class="accountMenuIcon">▤</span><span><b>Account Management</b><small>Personal details and delivery address</small></span><span class="chevron">›</span></button>
       <div class="accountMenuRow darkModeRow"><span class="accountMenuIcon">☾</span><span><b>Dark Screen Mode</b><small>Change the website appearance</small></span><label class="switch"><input id="darkModeToggle" type="checkbox" aria-label="Dark Screen Mode"><span class="switchSlider"></span></label></div>
@@ -126,6 +122,17 @@
     </div>
   </section>
 
+
+  <section id="customerInboxView" class="accountSubscreen hidden">
+    <button class="secondary accountBackBtn" type="button" data-account-back>← Back to My Account</button>
+    <section class="notificationPanel customerInboxPanel" aria-labelledby="customerInboxTitle">
+      <div class="notificationPanelHead">
+        <div><h2 id="customerInboxTitle">✉ Customer Inbox</h2><p class="muted">Messages, order alerts, and shipment updates from Big Alien Venture.</p></div>
+        <button class="secondary" type="button" id="refreshCustomerInbox">Refresh</button>
+      </div>
+      <div id="customerInboxMessages"><p class="notificationEmpty">Your messages and shipment updates will appear here.</p></div>
+    </section>
+  </section>
 
   <section id="accountManagementView" class="accountSubscreen hidden">
     <button class="secondary accountBackBtn" type="button" data-account-back>← Back to My Account</button>
