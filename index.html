@@ -7,13 +7,12 @@
   <link rel="icon" href="images/logo.jpg">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-<header class="top">
+<body class="signed-out">
+<header class="top market-header hidden" id="marketHeader">
   <div class="notice">🔥 Welcome to <b>Big Alien Venture 👽</b> · Customer service: <b>07025136166</b></div>
   <div class="nav">
     <a class="brand" href="#" data-view="home">
       <img src="images/logo.jpg" alt="Big Alien Venture logo">
-      <span>BIG ALIEN</span>
     </a>
     <div class="search"><input id="search" placeholder="Search products…"><button id="searchBtn">⌕</button></div>
     <button class="iconBtn" id="cartBtn">🛒 <span id="cartCount">0</span></button>
@@ -102,6 +101,17 @@
       <label>Full name<input id="profileName" required></label>
       <label>Phone<input id="profilePhone" required></label>
       <button class="primary" type="submit">Save Profile</button>
+      <hr><h3>Settings</h3>
+      <label>Delivery address<textarea id="savedAddress" placeholder="Your preferred delivery address"></textarea></label>
+      <button class="secondary" id="saveAddressBtn" type="button">Save Delivery Address</button>
+      <label class="settingToggle"><input id="darkModeToggle" type="checkbox"> Use dark mode on this device</label>
+      <h3>Customer Reviews</h3>
+      <label>Rating<select id="reviewRating"><option value="5">★★★★★ — Excellent</option><option value="4">★★★★ — Good</option><option value="3">★★★ — Okay</option><option value="2">★★ — Poor</option><option value="1">★ — Very poor</option></select></label>
+      <label>Your feedback<textarea id="reviewText" placeholder="Tell us about your experience"></textarea></label>
+      <a class="primary reviewLink" id="sendReviewBtn" href="https://wa.me/2347025136166" target="_blank" rel="noopener">Send Review via WhatsApp</a>
+      <h3>Customer Service</h3><p>Call or message us on 07025136166.</p>
+      <a class="primary reviewLink" href="https://wa.me/2347025136166" target="_blank" rel="noopener">WhatsApp Customer Service</a>
+      <a class="secondary reviewLink" href="tel:+2347025136166">Call Customer Service</a>
       <button class="secondary" id="logoutBtn" type="button">Logout</button>
       <div id="profileMsg" class="msg"></div>
     </form>

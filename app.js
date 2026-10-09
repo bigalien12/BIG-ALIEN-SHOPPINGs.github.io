@@ -27,6 +27,10 @@ function saveCart() {
   $("cartCount").textContent = cart.reduce((a, x) => a + x.qty, 0);
 }
 function show(id) {
+  const signedInView = !["authView", "otpView"].includes(id);
+  document.body.classList.toggle("signed-out", !signedInView);
+  const marketHeader = $("marketHeader");
+  if (marketHeader) marketHeader.classList.toggle("hidden", !signedInView);
   [
     "authView",
     "otpView",
@@ -157,6 +161,8 @@ async function loadProfile() {
   prefillCheckout();
   $("profileName").value = data?.full_name || "";
   $("profilePhone").value = data?.phone || "";
+  if ($("savedAddress")) $("savedAddress").value = localStorage.getItem("big_alien_delivery_address") || "";
+  if ($("darkModeToggle")) $("darkModeToggle").checked = localStorage.getItem("big_alien_dark_mode") === "true";
   const adminBtn = $("adminBtn");
   if (adminBtn) adminBtn.classList.toggle("hidden", data?.role !== "admin");
 }
@@ -395,7 +401,7 @@ async function init() {
   });
 }
 document.addEventListener("click", async (e) => {
-  let t = e.target;
+  let t = e.target.closest("[data-view], [data-cat], [data-product], [data-minus], [data-plus], [data-remove], [data-edit], [data-delete], [data-order], [data-close], [data-auth], [data-admin-tab], #cartBtn, #accountBtn, #checkoutBtn, #adminBtn") || e.target;
   if (t.dataset.view === "home") {
     e.preventDefault();
     show("homeView");
@@ -597,5 +603,22 @@ document.querySelector(".brand").addEventListener("click", (e) => {
   e.preventDefault();
   show("homeView");
 });
+// Customer settings: local-device preferences and WhatsApp feedback.
+if ($("saveAddressBtn")) $("saveAddressBtn").onclick = () => {
+  localStorage.setItem("big_alien_delivery_address", $("savedAddress").value.trim());
+  alert("Delivery address saved on this device.");
+};
+if ($("darkModeToggle")) $("darkModeToggle").onchange = () => {
+  document.body.classList.toggle("dark-mode", $("darkModeToggle").checked);
+  localStorage.setItem("big_alien_dark_mode", String($("darkModeToggle").checked));
+};
+if (localStorage.getItem("big_alien_dark_mode") === "true") document.body.classList.add("dark-mode");
+if ($("sendReviewBtn")) $("sendReviewBtn").onclick = (e) => {
+  const rating = $("reviewRating").value;
+  const feedback = $("reviewText").value.trim();
+  if (!feedback) { e.preventDefault(); alert("Please write your feedback first."); return; }
+  const message = `Big Alien Venture customer review\nRating: ${rating}/5 stars\nFeedback: ${feedback}`;
+  $("sendReviewBtn").href = "https://wa.me/2347025136166?text=" + encodeURIComponent(message);
+};
 saveCart();
 init();
