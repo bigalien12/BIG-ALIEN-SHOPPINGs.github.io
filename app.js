@@ -27,7 +27,15 @@ function saveCart() {
   $("cartCount").textContent = cart.reduce((a, x) => a + x.qty, 0);
 }
 function show(id) {
-  document.body.classList.toggle("account-area", ["profileView", "accountManagementView", "reviewsView", "supportView"].includes(id));
+  document.body.classList.toggle(
+    "account-area",
+    [
+      "profileView",
+      "accountManagementView",
+      "reviewsView",
+      "supportView",
+    ].includes(id)
+  );
   [
     "authView",
     "otpView",
@@ -48,14 +56,23 @@ function show(id) {
   });
   const nav = $("bottomNav");
   if (nav) {
-    nav.classList.toggle("hidden", ["authView", "otpView", "adminView"].includes(id));
+    nav.classList.toggle(
+      "hidden",
+      ["authView", "otpView", "adminView"].includes(id)
+    );
     nav.querySelectorAll("button").forEach((button) => {
       button.classList.toggle(
         "active",
         (id === "homeView" && button.dataset.view === "home") ||
-        (["profileView", "accountManagementView", "reviewsView", "supportView"].includes(id) && button.id === "bottomProfileBtn") ||
-        (id === "cartView" && button.id === "bottomCartBtn") ||
-        (id === "wishlistView" && button.id === "bottomWishlistBtn")
+          ([
+            "profileView",
+            "accountManagementView",
+            "reviewsView",
+            "supportView",
+          ].includes(id) &&
+            button.id === "bottomProfileBtn") ||
+          (id === "cartView" && button.id === "bottomCartBtn") ||
+          (id === "wishlistView" && button.id === "bottomWishlistBtn")
       );
     });
   }
@@ -64,14 +81,36 @@ function msg(id, t, ok = false) {
   $(id).textContent = t;
   $(id).style.color = ok ? "#147a32" : "#b00020";
 }
-function getWishlist() { try { return JSON.parse(localStorage.getItem(`big_alien_wishlist_${user?.id || "guest"}`) || "[]"); } catch { return []; } }
+function getWishlist() {
+  try {
+    return JSON.parse(
+      localStorage.getItem(`big_alien_wishlist_${user?.id || "guest"}`) || "[]"
+    );
+  } catch {
+    return [];
+  }
+}
 function renderWishlist() {
   const saved = getWishlist();
-  const items = products.filter(p => saved.includes(String(p.id)));
-  if ($("wishlistEmpty")) $("wishlistEmpty").classList.toggle("hidden", items.length > 0);
-  if ($("wishlistItems")) $("wishlistItems").innerHTML = items.map(p => `<article class="card"><img src="${esc(imageOrFallback(p.image_url))}" alt="${esc(p.name)}"><div class="cardBody"><h3>${esc(p.name)}</h3><div class="price">${money(p.price)}</div><button class="primary" data-product="${p.id}">View / Buy</button><button class="secondary" data-wishlist-remove="${p.id}">Remove</button></div></article>`).join("");
+  const items = products.filter((p) => saved.includes(String(p.id)));
+  if ($("wishlistEmpty"))
+    $("wishlistEmpty").classList.toggle("hidden", items.length > 0);
+  if ($("wishlistItems"))
+    $("wishlistItems").innerHTML = items
+      .map(
+        (p) =>
+          `<article class="card"><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc(p.name)}"><div class="cardBody"><h3>${esc( p.name )}</h3><div class="price">${money( p.price )}</div><button class="primary" data-product="${ p.id }">View / Buy</button><button class="secondary" data-wishlist-remove="${ p.id }">Remove</button></div></article>`
+      )
+      .join("");
 }
-function toggleWishlist(id) { const key=`big_alien_wishlist_${user?.id || "guest"}`; let list=getWishlist(); id=String(id); list=list.includes(id)?list.filter(x=>x!==id):[...list,id]; localStorage.setItem(key,JSON.stringify(list)); renderWishlist(); }
+function toggleWishlist(id) {
+  const key = `big_alien_wishlist_${user?.id || "guest"}`;
+  let list = getWishlist();
+  id = String(id);
+  list = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+  localStorage.setItem(key, JSON.stringify(list));
+  renderWishlist();
+}
 function imageOrFallback(url) {
   return url || "images/solar-panel.jpg";
 }
@@ -169,7 +208,140 @@ function renderCart() {
   let total = cart.reduce((a, x) => a + x.price * x.qty, 0);
   $("cartSummary").innerHTML = `<h3>Total: ${money( total )}</h3><button class="primary" id="checkoutBtn">Proceed to Checkout</button>`;
 }
+function checkoutReportKey() {
+  const cartKey = cart
+    .map((x) => `${x.id}:${x.qty}`)
+    .sort()
+    .join("|");
+  return user && cartKey ? `bav_payment_report_${user.id}_${cartKey}` : "";
+}
+function setupCheckoutPaymentGate() {
+  const form = $("checkoutForm");
+  if (!form || $("bavPaymentGate")) return;
+  const panel = document.createElement("div");
+  panel.id = "bavPaymentGate";
+  panel.className = "bankBox";
+  panel.innerHTML = `<b>Bank transfer</b><p>Account name: Abel Philip<br>Account number: <span id="bavAccountNo">6714306196</span> <button class="secondary" type="button" id="bavCopyAccount">Copy</button><br>Bank: Moniepoint MFB</p><p>Transfer the checkout total, then tap <b>I Have Paid</b>. This reports your payment; the store must still confirm receipt.</p><button class="primary" type="button" id="bavReportPayment">I Have Paid</button><p id="bavPaymentMsg" class="msg" aria-live="polite">Place Order unlocks after you submit your payment report.</p>`;
+  const submit = form.querySelector(
+    'button[type="submit"],input[type="submit"]'
+  );
+  if (submit) {
+    submit.id = "bavPlaceOrder";
+    submit.disabled = true;
+    submit.hidden = true;
+  }
+  const oldBank = form.querySelector(".bankBox");
+  if (oldBank) oldBank.remove();
+  const paymentLabel = $("coPayment")?.closest("label");
+  if (paymentLabel) paymentLabel.insertAdjacentElement("afterend", panel);
+  else form.prepend(panel);
+  $("bavCopyAccount").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("6714306196");
+      $("bavPaymentMsg").textContent = "Account number copied.";
+    } catch {
+      $("bavPaymentMsg").textContent =
+        "Copy not available. Please copy 6714306196 manually.";
+    }
+  });
+  $("bavReportPayment").addEventListener("click", reportCheckoutPayment);
+  $("coPayment")?.addEventListener("change", () => {
+    const bank = $("coPayment").value === "bank_transfer";
+    $("bavPaymentGate").classList.toggle("hidden", !bank);
+    if (submit) {
+      submit.hidden = !bank || !sessionStorage.getItem(checkoutReportKey());
+      submit.disabled = !bank || !sessionStorage.getItem(checkoutReportKey());
+    }
+    if (!bank)
+      $("bavPaymentMsg").textContent =
+        "Only bank transfer is currently configured for this checkout.";
+  });
+  const key = checkoutReportKey();
+  if (key && sessionStorage.getItem(key) && submit) {
+    submit.hidden = false;
+    submit.disabled = false;
+    $("bavPaymentMsg").textContent =
+      "Payment report saved for this checkout. You can place the order now.";
+  }
+}
+async function reportCheckoutPayment() {
+  const status = $("bavPaymentMsg");
+  const key = checkoutReportKey();
+  const submit = $("bavPlaceOrder");
+  if (!user) {
+    status.textContent = "Please sign in before reporting payment.";
+    return;
+  }
+  if (!cart.length) {
+    status.textContent = "Your cart is empty.";
+    return;
+  }
+  if ($("coPayment").value !== "bank_transfer") {
+    status.textContent = "Bank transfer is the only configured method.";
+    return;
+  }
+  if (key && sessionStorage.getItem(key)) {
+    if (submit) {
+      submit.hidden = false;
+      submit.disabled = false;
+    }
+    status.textContent =
+      "Payment report already saved. You can place the order now.";
+    return;
+  }
+  const amount = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const reportButton = $("bavReportPayment");
+  reportButton.disabled = true;
+  status.textContent = "Sending your payment report…";
+  const { data: report, error } = await sb
+    .from("payment_reports")
+    .insert({
+      user_id: user.id,
+      order_id: null,
+      payment_method: "bank_transfer",
+      amount,
+      customer_note: "Customer tapped I Have Paid before placing the order.",
+      status: "reported",
+    })
+    .select("id")
+    .single();
+  if (error) {
+    reportButton.disabled = false;
+    status.textContent = "Could not submit report: " + error.message;
+    return;
+  }
+  sessionStorage.setItem(key, report.id);
+  // Attempt admin dashboard alerts. If RLS blocks this, the report is still stored and the SQL policy/backend needs configuring.
+  const { data: admins, error: adminError } = await sb
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin");
+  let notificationError = adminError;
+  if (admins?.length) {
+    const result = await sb.from("notifications").insert(
+      admins.map((a) => ({
+        recipient_user_id: a.id,
+        title: "Customer reported payment",
+        message: `${$("coName").value.trim()} (${ user.email || "no email" }) reports a transfer of ${money( amount )}. Check Moniepoint before confirming.`,
+        type: "payment_reported",
+        order_id: null,
+      }))
+    );
+    notificationError = result.error;
+  }
+  await sendOrderEmail("payment_reported", null);
+  if (submit) {
+    submit.hidden = false;
+    submit.disabled = false;
+  }
+  status.textContent = notificationError
+    ? "Payment report saved and Place Order unlocked, but admin alert needs permissions configured. " +
+      notificationError.message
+    : "Payment report sent. Place Order is now available. The store must still verify the transfer.";
+  reportButton.disabled = false;
+}
 function prefillCheckout() {
+  setupCheckoutPaymentGate();
   if (profile) {
     $("coName").value = profile.full_name || "";
     $("coPhone").value = profile.phone || "";
@@ -178,7 +350,12 @@ function prefillCheckout() {
 function renderAccountCustomerName() {
   const el = $("accountCustomerName");
   if (!el) return;
-  const fullName = (profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
+  const fullName = (
+    profile?.full_name ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    ""
+  ).trim();
   const emailName = (user?.email || "").split("@")[0];
   el.textContent = fullName || emailName || "Welcome!";
 }
@@ -196,32 +373,43 @@ async function loadProfile() {
   $("profileName").value = data?.full_name || "";
   $("profilePhone").value = data?.phone || "";
   const addressKey = `big_alien_address_${user.id}`;
-  if ($("savedAddress")) $("savedAddress").value = localStorage.getItem(addressKey) || "";
-  if ($("coAddress") && !$("coAddress").value) $("coAddress").value = localStorage.getItem(addressKey) || "";
+  if ($("savedAddress"))
+    $("savedAddress").value = localStorage.getItem(addressKey) || "";
+  if ($("coAddress") && !$("coAddress").value)
+    $("coAddress").value = localStorage.getItem(addressKey) || "";
   const adminBtn = $("adminBtn");
   if (adminBtn) adminBtn.classList.toggle("hidden", data?.role !== "admin");
 }
 async function submitOrder(e) {
   e.preventDefault();
+  if (!user) return msg("checkoutMsg", "Please sign in first.");
   if (!cart.length) return msg("checkoutMsg", "Cart is empty.");
-  let total = cart.reduce((a, x) => a + x.price * x.qty, 0);
-  let payload = {
+  const reportKey = checkoutReportKey();
+  const reportId = reportKey ? sessionStorage.getItem(reportKey) : null;
+  if ($("coPayment").value !== "bank_transfer" || !reportId)
+    return msg(
+      "checkoutMsg",
+      "Transfer payment and tap “I Have Paid” before placing your order."
+    );
+  const total = cart.reduce((a, x) => a + x.price * x.qty, 0);
+  const payload = {
     user_id: user.id,
     total,
-    payment_method: $("coPayment").value,
+    payment_method: "bank_transfer",
     payment_status: "pending",
     order_status: "processing",
     customer_name: $("coName").value.trim(),
     customer_phone: $("coPhone").value.trim(),
     delivery_address: $("coAddress").value.trim(),
+    notes: "Customer reported payment; awaiting admin verification.",
   };
-  let { data: o, error } = await sb
+  const { data: o, error } = await sb
     .from("orders")
     .insert(payload)
     .select()
     .single();
   if (error) return msg("checkoutMsg", error.message);
-  let items = cart.map((x) => ({
+  const items = cart.map((x) => ({
     order_id: o.id,
     product_id: x.id,
     product_name: x.name,
@@ -229,24 +417,53 @@ async function submitOrder(e) {
     quantity: x.qty,
     image_url: x.image_url,
   }));
-  let { error: ie } = await sb.from("order_items").insert(items);
+  const { error: ie } = await sb.from("order_items").insert(items);
   if (ie) {
     await sb.from("orders").delete().eq("id", o.id);
     return msg("checkoutMsg", ie.message);
   }
+  const { error: linkError } = await sb
+    .from("payment_reports")
+    .update({ order_id: o.id })
+    .eq("id", reportId)
+    .eq("user_id", user.id)
+    .eq("status", "reported");
+  if (linkError)
+    console.warn(
+      "Order created but payment report could not be linked:",
+      linkError.message
+    );
   await sb
     .from("shipment_updates")
     .insert({
       order_id: o.id,
       status: "Order received",
-      message: "Your order has been received and is being processed.",
+      message: "Order received; payment awaits admin verification.",
     });
+  const { data: admins } = await sb
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin");
+  if (admins?.length) {
+    const { error: notifyError } = await sb.from("notifications").insert(
+      admins.map((a) => ({
+        recipient_user_id: a.id,
+        title: "New order placed",
+        message: `Order ${o.id.slice(0, 8)}: ${$("coName").value.trim()} · ${$( "coPhone" ).value.trim()} · ${money(total)}. Payment is awaiting verification.`,
+        type: "new_order",
+        order_id: o.id,
+      }))
+    );
+    if (notifyError)
+      console.warn("Admin new-order notification failed:", notifyError.message);
+  }
   await sendOrderEmail("new_order", o.id);
+  sessionStorage.removeItem(reportKey);
   cart = [];
   saveCart();
   msg(
     "checkoutMsg",
-    "Order placed successfully.\nCheck My Orders for updates.",
+    "Order placed. Your payment is awaiting store verification. Check My Orders for updates.",
     true
   );
   setTimeout(() => openOrders(), 600);
@@ -254,15 +471,30 @@ async function submitOrder(e) {
 async function openOrders() {
   show("ordersView");
   await loadCustomerNotifications();
-  let { data, error } = await sb.from("orders").select("*").order("created_at", { ascending: false });
-  if (error) return ($("ordersList").innerHTML = `<div class="summary">${esc(error.message)}</div>`);
-  if (!data?.length) return ($("ordersList").innerHTML = `<div class="summary">No orders yet.</div>`);
+  let { data, error } = await sb
+    .from("orders")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error)
+    return ($("ordersList").innerHTML = `<div class="summary">${esc( error.message )}</div>`);
+  if (!data?.length)
+    return ($(
+      "ordersList"
+    ).innerHTML = `<div class="summary">No orders yet.</div>`);
   let html = "";
   for (const o of data) {
-    let { data: ups } = await sb.from("shipment_updates").select("*").eq("order_id", o.id).order("created_at", { ascending: false });
+    let { data: ups } = await sb
+      .from("shipment_updates")
+      .select("*")
+      .eq("order_id", o.id)
+      .order("created_at", { ascending: false });
     const latest = (ups || [])[0];
-    const pickup = /arrived|ready for pickup|available for pickup|at pickup point/i.test(`${o.order_status || ""} ${latest?.status || ""} ${latest?.message || ""}`);
-    html += `<div class="orderCard"><b>Order ${o.id.slice(0, 8)}</b><p>Total: ${money(o.total)} · Payment: <span class="status">${esc(o.payment_status)}</span> · Status: <span class="status">${esc(o.order_status)}</span></p><p>Tracking: ${esc(o.tracking_number || "Not assigned")}</p><p>Delivery: ${esc(o.delivery_address)}</p>${pickup ? `<div class="pickupNotice"><b>📦 Your item may be ready for collection.</b><p>${esc(latest?.message || "Please check the latest shipment details before travelling to collect it.")}</p></div>` : ""}<h4>Shipment updates</h4>${(ups || []).map(u => `<div>📍 <b>${esc(u.status)}</b> — ${esc(u.message)} <span class="muted">${new Date(u.created_at).toLocaleString()}</span></div>`).join("") || "<div class='muted'>No shipment updates yet.</div>"}</div>`;
+    const pickup =
+      /arrived|ready for pickup|available for pickup|at pickup point/i.test(
+        `${o.order_status || ""} ${latest?.status || ""} ${ latest?.message || "" }`
+      );
+    html += `<div class="orderCard"><b>Order ${o.id.slice( 0, 8 )}</b><p>Total: ${money(o.total)} · Payment: <span class="status">${esc( o.payment_status )}</span> · Status: <span class="status">${esc( o.order_status )}</span></p><p>Tracking: ${esc( o.tracking_number || "Not assigned" )}</p><p>Delivery: ${esc(o.delivery_address)}</p>${ pickup ? `<div class="pickupNotice"><b>📦 Your item may be ready for collection.</b><p>${esc( latest?.message || "Please check the latest shipment details before travelling to collect it." )}</p></div>` : "" }<h4>Shipment updates</h4>${ (ups || []) .map( (u) => `<div>📍 <b>${esc(u.status)}</b> — ${esc( u.message )} <span class="muted">${new Date( u.created_at ).toLocaleString()}</span></div>` ) .join("") || "<div class='muted'>No shipment updates yet.</div>" }</div>`;
   }
   $("ordersList").innerHTML = html;
 }
@@ -270,25 +502,61 @@ async function openOrders() {
 async function loadCustomerNotifications() {
   const box = $("customerNotifications");
   if (!box || !sb || !user) return;
-  const { data, error } = await sb.from("notifications").select("id,title,message,type,order_id,read_at,created_at").eq("recipient_user_id", user.id).order("created_at", { ascending: false }).limit(30);
-  if (error) { box.innerHTML = `<p class="notificationEmpty">Notifications are not configured yet. Run the supplied database migration first.</p>`; return; }
-  if (!data?.length) { box.innerHTML = `<p class="notificationEmpty">No notifications yet. Shipment updates from the admin will appear here.</p>`; return; }
-  box.innerHTML = data.map(n => `<article class="notificationItem ${n.read_at ? "" : "unread"}"><span aria-hidden="true">${n.type === "shipment_update" ? "📦" : "🔔"}</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc(n.message)}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>`}</article>`).join("");
+  const { data, error } = await sb
+    .from("notifications")
+    .select("id,title,message,type,order_id,read_at,created_at")
+    .eq("recipient_user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error) {
+    box.innerHTML = `<p class="notificationEmpty">Notifications are not configured yet. Run the supplied database migration first.</p>`;
+    return;
+  }
+  if (!data?.length) {
+    box.innerHTML = `<p class="notificationEmpty">No notifications yet. Shipment updates from the admin will appear here.</p>`;
+    return;
+  }
+  box.innerHTML = data
+    .map(
+      (n) =>
+        `<article class="notificationItem ${ n.read_at ? "" : "unread" }"><span aria-hidden="true">${ n.type === "shipment_update" ? "📦" : "🔔" }</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc( n.message )}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${ n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>` }</article>`
+    )
+    .join("");
 }
 
 async function loadAdminNotifications() {
   const box = $("adminNotifications");
   if (!box || !sb || !user) return;
-  const { data, error } = await sb.from("notifications").select("id,title,message,type,order_id,read_at,created_at").eq("recipient_user_id", user.id).order("created_at", { ascending: false }).limit(50);
-  if (error) { box.innerHTML = `<p class="notificationEmpty">Notifications need the supplied database migration. ${esc(error.message)}</p>`; return; }
-  const unread = (data || []).filter(n => !n.read_at).length;
+  const { data, error } = await sb
+    .from("notifications")
+    .select("id,title,message,type,order_id,read_at,created_at")
+    .eq("recipient_user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) {
+    box.innerHTML = `<p class="notificationEmpty">Notifications need the supplied database migration. ${esc( error.message )}</p>`;
+    return;
+  }
+  const unread = (data || []).filter((n) => !n.read_at).length;
   if ($("adminUnreadCount")) $("adminUnreadCount").textContent = String(unread);
-  if (!data?.length) { box.innerHTML = `<p class="notificationEmpty">No admin notifications yet. New orders and customer payment reports will appear here.</p>`; return; }
-  box.innerHTML = data.map(n => `<article class="notificationItem ${n.read_at ? "" : "unread"}"><span aria-hidden="true">${n.type === "new_order" ? "🛍️" : n.type === "payment_reported" ? "💳" : "🔔"}</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc(n.message)}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${n.order_id ? `<button class="secondary" type="button" data-order="${n.order_id}">Open order</button>` : ""}${n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>`}</article>`).join("");
+  if (!data?.length) {
+    box.innerHTML = `<p class="notificationEmpty">No admin notifications yet. New orders and customer payment reports will appear here.</p>`;
+    return;
+  }
+  box.innerHTML = data
+    .map(
+      (n) =>
+        `<article class="notificationItem ${ n.read_at ? "" : "unread" }"><span aria-hidden="true">${ n.type === "new_order" ? "🛍️" : n.type === "payment_reported" ? "💳" : "🔔" }</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc( n.message )}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${ n.order_id ? `<button class="secondary" type="button" data-order="${n.order_id}">Open order</button>` : "" }${ n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>` }</article>`
+    )
+    .join("");
 }
 
 async function markNotificationRead(id) {
-  const { error } = await sb.from("notifications").update({read_at: new Date().toISOString()}).eq("id", id).eq("recipient_user_id", user.id);
+  const { error } = await sb
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("recipient_user_id", user.id);
   if (error) return alert(error.message);
   await loadCustomerNotifications();
   await loadAdminNotifications();
@@ -297,9 +565,17 @@ async function markNotificationRead(id) {
 async function sendOrderEmail(event, orderId) {
   // Email is sent by a server-side Supabase Edge Function; never put an email API key in browser code.
   try {
-    const { error } = await sb.functions.invoke("send-order-email", { body: { event, order_id: orderId } });
-    if (error) console.warn("Email notification was not sent; check Edge Function setup:", error.message);
-  } catch (err) { console.warn("Email notification is not configured yet:", err); }
+    const { error } = await sb.functions.invoke("send-order-email", {
+      body: { event, order_id: orderId },
+    });
+    if (error)
+      console.warn(
+        "Email notification was not sent; check Edge Function setup:",
+        error.message
+      );
+  } catch (err) {
+    console.warn("Email notification is not configured yet:", err);
+  }
 }
 
 async function openAdmin() {
@@ -424,14 +700,19 @@ async function manageOrder(id) {
       })
       .eq("id", id);
     if (error) return alert(error.message);
-    const shipmentMessage = $("mMessage").value.trim() || `Shipment status updated to ${status.replaceAll("_", " ")}.`;
+    const shipmentMessage =
+      $("mMessage").value.trim() ||
+      `Shipment status updated to ${status.replaceAll("_", " ")}.`;
     const { error: shipmentError } = await sb.from("shipment_updates").insert({
       order_id: id,
       status,
       message: shipmentMessage,
       location: $("mLocation").value.trim() || null,
     });
-    if (shipmentError) return alert(`Order saved, but shipment notification could not be created: ${shipmentError.message}`);
+    if (shipmentError)
+      return alert(
+        `Order saved, but shipment notification could not be created: ${shipmentError.message}`
+      );
     await sendOrderEmail("shipment_update", id);
     $("orderModal").classList.add("hidden");
     await loadAdminOrders();
@@ -456,14 +737,23 @@ async function init() {
     show("homeView");
     await loadProducts();
   } else show("authView");
-  sb.channel("bav-order-notifications").on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
-    const n = payload.new;
-    if (n?.recipient_user_id === user?.id) {
-      loadCustomerNotifications();
-      loadAdminNotifications();
-      if ("Notification" in window && Notification.permission === "granted") new Notification(n.title || "Big Alien Venture", { body: n.message || "Your order has an update." });
-    }
-  }).subscribe();
+  sb.channel("bav-order-notifications")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "notifications" },
+      (payload) => {
+        const n = payload.new;
+        if (n?.recipient_user_id === user?.id) {
+          loadCustomerNotifications();
+          loadAdminNotifications();
+          if ("Notification" in window && Notification.permission === "granted")
+            new Notification(n.title || "Big Alien Venture", {
+              body: n.message || "Your order has an update.",
+            });
+        }
+      }
+    )
+    .subscribe();
   sb.auth.onAuthStateChange(async (_e, s) => {
     user = s?.user || null;
     if (user) {
@@ -513,7 +803,14 @@ function bindAccountAndBottomNavigation() {
         window.scrollTo({ top: 0, behavior: "auto" });
         return;
       }
-      const viewId = action === "management" ? "accountManagementView" : action === "reviews" ? "reviewsView" : action === "support" ? "supportView" : null;
+      const viewId =
+        action === "management"
+          ? "accountManagementView"
+          : action === "reviews"
+          ? "reviewsView"
+          : action === "support"
+          ? "supportView"
+          : null;
       if (viewId) {
         show(viewId);
         window.scrollTo({ top: 0, behavior: "auto" });
@@ -551,8 +848,12 @@ document.addEventListener("click", async (e) => {
     renderProducts();
   }
   if (t.dataset.product) openProduct(t.dataset.product);
-  if (t.dataset.wishlistRemove) { toggleWishlist(t.dataset.wishlistRemove); }
-  if (t.dataset.wishlistAdd) { toggleWishlist(t.dataset.wishlistAdd); }
+  if (t.dataset.wishlistRemove) {
+    toggleWishlist(t.dataset.wishlistRemove);
+  }
+  if (t.dataset.wishlistAdd) {
+    toggleWishlist(t.dataset.wishlistAdd);
+  }
   if (t.id === "cartBtn" || t.id === "bottomCartBtn") {
     show("cartView");
     renderCart();
@@ -571,11 +872,19 @@ document.addEventListener("click", async (e) => {
     openOrders();
   }
   if (t.dataset.accountAction) {
-    ["accountManagementPanel", "reviewsPanel", "supportPanel"].forEach(id => $(id)?.classList.add("hidden"));
-    if (t.dataset.accountAction === "orders") { show("ordersView"); openOrders(); }
-    if (t.dataset.accountAction === "management") $("accountManagementPanel").classList.remove("hidden");
-    if (t.dataset.accountAction === "reviews") $("reviewsPanel").classList.remove("hidden");
-    if (t.dataset.accountAction === "support") $("supportPanel").classList.remove("hidden");
+    ["accountManagementPanel", "reviewsPanel", "supportPanel"].forEach((id) =>
+      $(id)?.classList.add("hidden")
+    );
+    if (t.dataset.accountAction === "orders") {
+      show("ordersView");
+      openOrders();
+    }
+    if (t.dataset.accountAction === "management")
+      $("accountManagementPanel").classList.remove("hidden");
+    if (t.dataset.accountAction === "reviews")
+      $("reviewsPanel").classList.remove("hidden");
+    if (t.dataset.accountAction === "support")
+      $("supportPanel").classList.remove("hidden");
   }
   if (t.id === "bottomProfileBtn") {
     show("profileView");
@@ -622,7 +931,8 @@ document.addEventListener("click", async (e) => {
   }
   if (t.dataset.delete) deleteProduct(t.dataset.delete);
   if (t.dataset.order) manageOrder(t.dataset.order);
-  if (t.dataset.readNotification) markNotificationRead(t.dataset.readNotification);
+  if (t.dataset.readNotification)
+    markNotificationRead(t.dataset.readNotification);
   if (t.dataset.close) $(t.dataset.close).classList.add("hidden");
   if (t.dataset.auth) {
     document
@@ -757,13 +1067,24 @@ $("profileForm").onsubmit = async (e) => {
       phone: $("profilePhone").value.trim(),
     })
     .eq("id", user.id);
-  if (!error && user) localStorage.setItem(`big_alien_address_${user.id}`, $("savedAddress").value.trim());
+  if (!error && user)
+    localStorage.setItem(
+      `big_alien_address_${user.id}`,
+      $("savedAddress").value.trim()
+    );
   msg("profileMsg", error?.message || "Profile saved.", !error);
   if (!error) loadProfile();
 };
-if ($("adminNotificationsBtn")) $("adminNotificationsBtn").onclick = async () => { const panel = $("adminNotificationsPanel"); panel.classList.toggle("hidden"); await loadAdminNotifications(); };
-if ($("refreshAdminNotifications")) $("refreshAdminNotifications").onclick = loadAdminNotifications;
-if ($("refreshCustomerNotifications")) $("refreshCustomerNotifications").onclick = loadCustomerNotifications;
+if ($("adminNotificationsBtn"))
+  $("adminNotificationsBtn").onclick = async () => {
+    const panel = $("adminNotificationsPanel");
+    panel.classList.toggle("hidden");
+    await loadAdminNotifications();
+  };
+if ($("refreshAdminNotifications"))
+  $("refreshAdminNotifications").onclick = loadAdminNotifications;
+if ($("refreshCustomerNotifications"))
+  $("refreshCustomerNotifications").onclick = loadCustomerNotifications;
 if ($("logoutBtn")) $("logoutBtn").onclick = () => sb.auth.signOut();
 if ($("logoutMenuBtn")) $("logoutMenuBtn").onclick = () => sb.auth.signOut();
 function applyTheme(dark) {
@@ -772,51 +1093,67 @@ function applyTheme(dark) {
   if ($("darkModeToggle")) $("darkModeToggle").checked = !!dark;
 }
 applyTheme(localStorage.getItem("big_alien_dark_mode") === "1");
-if ($("darkModeToggle")) $("darkModeToggle").addEventListener("change", e => applyTheme(e.target.checked));
+if ($("darkModeToggle"))
+  $("darkModeToggle").addEventListener("change", (e) =>
+    applyTheme(e.target.checked)
+  );
 const reviewPhotoInput = $("reviewPhotos");
 let selectedReviewPhotos = [];
-if (reviewPhotoInput) reviewPhotoInput.addEventListener("change", () => {
-  const files = Array.from(reviewPhotoInput.files || []);
-  const preview = $("reviewPhotoPreview");
-  if (files.length > 4) {
-    alert("Please choose no more than 4 photos.");
-    reviewPhotoInput.value = "";
-    selectedReviewPhotos = [];
-    if (preview) preview.replaceChildren();
-    return;
-  }
-  const tooLarge = files.find(file => file.size > 5 * 1024 * 1024);
-  if (tooLarge) {
-    alert("Each photo must be 5 MB or smaller.");
-    reviewPhotoInput.value = "";
-    selectedReviewPhotos = [];
-    if (preview) preview.replaceChildren();
-    return;
-  }
-  selectedReviewPhotos = files.filter(file => file.type.startsWith("image/"));
-  if (preview) {
-    preview.replaceChildren();
-    selectedReviewPhotos.forEach(file => {
-      const figure = document.createElement("figure");
-      const img = document.createElement("img");
-      img.alt = file.name;
-      img.src = URL.createObjectURL(file);
-      img.onload = () => URL.revokeObjectURL(img.src);
-      const caption = document.createElement("figcaption");
-      caption.textContent = file.name;
-      figure.append(img, caption);
-      preview.append(figure);
-    });
-  }
-});
-if ($("sendReviewBtn")) $("sendReviewBtn").onclick = () => {
-  const rating = $("reviewRating").value;
-  const review = $("reviewText").value.trim();
-  if (!review) { alert("Please write a short review first."); return; }
-  const photoNote = selectedReviewPhotos.length ? `\nPhotos selected: ${selectedReviewPhotos.length}. I will attach these photos in WhatsApp before sending.` : "";
-  const text = `Big Alien Venture customer review\nRating: ${rating}/5\nCustomer: ${user?.email || "Customer"}\nReview: ${review}${photoNote}`;
-  window.open(`https://wa.me/2347025136166?text=${encodeURIComponent(text)}`, "_blank", "noopener");
-};
+if (reviewPhotoInput)
+  reviewPhotoInput.addEventListener("change", () => {
+    const files = Array.from(reviewPhotoInput.files || []);
+    const preview = $("reviewPhotoPreview");
+    if (files.length > 4) {
+      alert("Please choose no more than 4 photos.");
+      reviewPhotoInput.value = "";
+      selectedReviewPhotos = [];
+      if (preview) preview.replaceChildren();
+      return;
+    }
+    const tooLarge = files.find((file) => file.size > 5 * 1024 * 1024);
+    if (tooLarge) {
+      alert("Each photo must be 5 MB or smaller.");
+      reviewPhotoInput.value = "";
+      selectedReviewPhotos = [];
+      if (preview) preview.replaceChildren();
+      return;
+    }
+    selectedReviewPhotos = files.filter((file) =>
+      file.type.startsWith("image/")
+    );
+    if (preview) {
+      preview.replaceChildren();
+      selectedReviewPhotos.forEach((file) => {
+        const figure = document.createElement("figure");
+        const img = document.createElement("img");
+        img.alt = file.name;
+        img.src = URL.createObjectURL(file);
+        img.onload = () => URL.revokeObjectURL(img.src);
+        const caption = document.createElement("figcaption");
+        caption.textContent = file.name;
+        figure.append(img, caption);
+        preview.append(figure);
+      });
+    }
+  });
+if ($("sendReviewBtn"))
+  $("sendReviewBtn").onclick = () => {
+    const rating = $("reviewRating").value;
+    const review = $("reviewText").value.trim();
+    if (!review) {
+      alert("Please write a short review first.");
+      return;
+    }
+    const photoNote = selectedReviewPhotos.length
+      ? `\nPhotos selected: ${selectedReviewPhotos.length}. I will attach these photos in WhatsApp before sending.`
+      : "";
+    const text = `Big Alien Venture customer review\nRating: ${rating}/5\nCustomer: ${ user?.email || "Customer" }\nReview: ${review}${photoNote}`;
+    window.open(
+      `https://wa.me/2347025136166?text=${encodeURIComponent(text)}`,
+      "_blank",
+      "noopener"
+    );
+  };
 $("productForm").onsubmit = saveProduct;
 $("addProductBtn").onclick = () => openProductModal();
 $("adminLogout").onclick = () => show("homeView");
@@ -835,4 +1172,3 @@ setInterval(() => {
     loadAdminNotifications();
   }
 }, 30000);
-
