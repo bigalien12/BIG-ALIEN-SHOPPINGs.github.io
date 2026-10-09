@@ -545,7 +545,7 @@ async function markNotificationRead(id) {
 async function sendOrderEmail(event, orderId) {
   // Email is sent by a server-side Supabase Edge Function; never put an email API key in browser code.
   try {
-    const { error } = await sb.functions.invoke("send-order-email", {
+    const { error } = await sb.functions.invoke("notify-admin-order", {
       body: { event, order_id: orderId },
     });
     if (error)
