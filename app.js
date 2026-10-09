@@ -27,15 +27,10 @@ function saveCart() {
   $("cartCount").textContent = cart.reduce((a, x) => a + x.qty, 0);
 }
 function show(id) {
+  document.body.classList.toggle("marketplace-view", id === "homeView");
   document.body.classList.toggle(
     "account-area",
-    [
-      "profileView",
-      "customerInboxView",
-      "accountManagementView",
-      "reviewsView",
-      "supportView",
-    ].includes(id)
+    ["profileView", "customerInboxView", "accountManagementView", "reviewsView", "supportView"].includes(id)
   );
   [
     "authView",
@@ -182,8 +177,9 @@ function openProduct(id) {
   };
 }
 function addCart(p, q) {
-  let x = cart.find((x) => x.id === p.id);
-  if (x) x.qty = Math.min(p.stock, x.qty + q);
+  q = Math.max(1, Math.floor(Number(q) || 1));
+  let x = cart.find((x) => String(x.id) === String(p.id));
+  if (x) x.qty = Math.min(Number(p.stock || 0), x.qty + q);
   else
     cart.push({
       id: p.id,
@@ -191,6 +187,7 @@ function addCart(p, q) {
       name: p.name,
       price: p.price,
       image_url: p.image_url,
+      stock: Number(p.stock || 0),
     });
   saveCart();
 }
@@ -334,12 +331,45 @@ async function reportCheckoutPayment() {
     : "Payment report sent. Place Order is now available. The store must still verify the transfer.";
   reportButton.disabled = false;
 }
+const ADDRESS_FIELDS = ["Country", "State", "Lga", "City", "Street", "Building", "Landmark", "Postal"];
+function setAddressFields(prefix, rawAddress) {
+  const values = {};
+  String(rawAddress || "").split("\n").forEach((line) => {
+    const ix = line.indexOf(":");
+    if (ix > 0) values[line.slice(0, ix).trim().toLowerCase()] = line.slice(ix + 1).trim();
+  });
+  const map = { Country: "country", State: "state", Lga: "lga", City: "city/town", Street: "street", Building: "house/building", Landmark: "landmark", Postal: "postal code" };
+  ADDRESS_FIELDS.forEach((field) => {
+    const el = $(prefix + field);
+    if (el && values[map[field]]) el.value = values[map[field]];
+  });
+  // Support addresses saved before the structured address form was introduced.
+  if (rawAddress && !String(rawAddress).includes("Country:")) {
+    const city = $(prefix + "City");
+    if (city && !city.value) city.value = String(rawAddress).trim();
+  }
+}
+function getAddressText(prefix) {
+  const values = [
+    ["Country", $(prefix + "Country")?.value], ["State", $(prefix + "State")?.value],
+    ["LGA", $(prefix + "Lga")?.value], ["City/Town", $(prefix + "City")?.value],
+    ["Street", $(prefix + "Street")?.value], ["House/Building", $(prefix + "Building")?.value],
+    ["Landmark", $(prefix + "Landmark")?.value], ["Postal code", $(prefix + "Postal")?.value]
+  ].filter(([, value]) => String(value || "").trim());
+  return values.map(([key, value]) => `${key}: ${String(value).trim()}`).join("\n");
+}
+function syncAddressText(prefix, hiddenId) {
+  const hidden = $(hiddenId);
+  if (hidden) hidden.value = getAddressText(prefix);
+}
 function prefillCheckout() {
   setupCheckoutPaymentGate();
   if (profile) {
     $("coName").value = profile.full_name || "";
     $("coPhone").value = profile.phone || "";
   }
+  if (user) setAddressFields("co", localStorage.getItem(`big_alien_address_${user.id}`) || "");
+  syncAddressText("co", "coAddress");
 }
 function renderAccountCustomerName() {
   const el = $("accountCustomerName");
@@ -367,10 +397,16 @@ async function loadProfile() {
   $("profileName").value = data?.full_name || "";
   $("profilePhone").value = data?.phone || "";
   const addressKey = `big_alien_address_${user.id}`;
-  if ($("savedAddress"))
-    $("savedAddress").value = localStorage.getItem(addressKey) || "";
-  if ($("coAddress") && !$("coAddress").value)
-    $("coAddress").value = localStorage.getItem(addressKey) || "";
+  const savedAddress = localStorage.getItem(addressKey) || "";
+  if ($("savedAddress")) {
+    $("savedAddress").value = savedAddress;
+    setAddressFields("profile", savedAddress);
+    syncAddressText("profile", "savedAddress");
+  }
+  if ($("coAddress")) {
+    if (!$("coAddress").value) setAddressFields("co", savedAddress);
+    syncAddressText("co", "coAddress");
+  }
   const adminBtn = $("adminBtn");
   if (adminBtn) adminBtn.classList.toggle("hidden", data?.role !== "admin");
 }
@@ -928,7 +964,7 @@ document.addEventListener("click", async (e) => {
     prefillCheckout();
   }
   if (t.dataset.minus) {
-    let x = cart.find((x) => x.id === t.dataset.minus);
+    let x = cart.find((x) => String(x.id) === String(t.dataset.minus));
     if (x) {
       x.qty = Math.max(1, x.qty - 1);
       saveCart();
@@ -936,14 +972,20 @@ document.addEventListener("click", async (e) => {
     }
   }
   if (t.dataset.plus) {
-    let x = cart.find((x) => x.id === t.dataset.plus),
-      p = productById(t.dataset.plus);
-    if (x && p) x.qty = Math.min(p.stock, x.qty + 1);
-    saveCart();
-    renderCart();
+    const x = cart.find((item) => String(item.id) === String(t.dataset.plus));
+    const p = products.find((item) => String(item.id) === String(t.dataset.plus));
+    const stock = Number(p?.stock ?? x?.stock ?? 999999);
+    if (x && x.qty < stock) {
+      x.qty += 1;
+      if (p) x.stock = Number(p.stock || 0);
+      saveCart();
+      renderCart();
+    } else if (x) {
+      alert("You have reached the available stock for this product.");
+    }
   }
   if (t.dataset.remove) {
-    cart = cart.filter((x) => x.id !== t.dataset.remove);
+    cart = cart.filter((x) => String(x.id) !== String(t.dataset.remove));
     saveCart();
     renderCart();
   }
@@ -1003,7 +1045,7 @@ async function signInWithGoogle() {
   if (button) { button.disabled = true; button.textContent = "Connecting to Google…"; }
   const { error } = await sb.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: window.location.origin + window.location.pathname }
+    options: { redirectTo: window.location.href.split("#")[0].split("?")[0] }
   });
   if (error) {
     msg("authMsg", error.message);
@@ -1101,9 +1143,14 @@ $("search").oninput = () => {
   query = $("search").value;
   renderProducts();
 };
-$("checkoutForm").onsubmit = submitOrder;
+$("checkoutForm").onsubmit = (e) => {
+  syncAddressText("co", "coAddress");
+  if (!$ ("coAddress").value.trim()) { e.preventDefault(); return msg("checkoutMsg", "Please complete your delivery address."); }
+  submitOrder(e);
+};
 $("profileForm").onsubmit = async (e) => {
   e.preventDefault();
+  syncAddressText("profile", "savedAddress");
   let { error } = await sb
     .from("profiles")
     .update({
@@ -1138,9 +1185,12 @@ function applyTheme(dark) {
 }
 applyTheme(localStorage.getItem("big_alien_dark_mode") === "1");
 if ($("darkModeToggle"))
-  $("darkModeToggle").addEventListener("change", (e) =>
-    applyTheme(e.target.checked)
-  );
+  $("darkModeToggle").addEventListener("change", (e) => applyTheme(e.target.checked));
+["profile", "co"].forEach((prefix) => ADDRESS_FIELDS.forEach((field) => {
+  const el = $(prefix + field);
+  if (el) el.addEventListener("input", () => syncAddressText(prefix, prefix === "profile" ? "savedAddress" : "coAddress"));
+  if (el) el.addEventListener("change", () => syncAddressText(prefix, prefix === "profile" ? "savedAddress" : "coAddress"));
+}));
 const reviewPhotoInput = $("reviewPhotos");
 let selectedReviewPhotos = [];
 if (reviewPhotoInput)

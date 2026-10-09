@@ -5,5 +5,44 @@ body.dark{--ink:#e5edf9;--muted:#a7b3c6;--line:#2d3b51;--surface:#172337;--bg:#0
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card>img{height:155px}.adminRow{grid-template-columns:55px minmax(120px,1fr) 90px 65px 70px 150px;min-width:650px}.productDetail{gap:18px;padding:16px}.hero{align-items:flex-start;flex-direction:column}}
 @media(max-width:560px){.nav{padding:10px;gap:8px;flex-wrap:wrap}.brand{font-size:18px}.brand img{width:34px;height:34px}.search{order:3;flex-basis:100%;max-width:none}.cats{padding:0 10px 10px}main{padding:0 10px;margin-top:14px}.authCard{padding:22px 17px}.hero{padding:20px}.grid{gap:10px}.card>img{height:125px}.cardBody{padding:10px}.cardBody h3{font-size:14px}.price{font-size:19px}.productDetail{grid-template-columns:1fr}.productDetail img{max-height:300px}.adminHead{align-items:flex-start;flex-direction:column}.adminHeadActions{width:100%}.adminHeadActions button{flex:1}.notificationItem{flex-wrap:wrap}.cartRow{flex-wrap:wrap}.orderStatusTabs button{font-size:13px;padding:9px 10px}}
 
-/* Approved Big Alien Venture updates: Google auth, dedicated inbox, and readable notification states */
-.authDivider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:18px 0}.authDivider:before,.authDivider:after{content:"";height:1px;background:var(--line);flex:1}.googleButton{width:100%;display:flex;justify-content:center;align-items:center;gap:10px;background:#fff!important;color:#263238!important;border:1px solid #cfd5df!important;padding:12px 14px}.googleG{display:inline-grid;place-items:center;width:23px;height:23px;border:1px solid #d9dee7;border-radius:50%;font-weight:900;color:#4285f4;background:#fff}.customerInboxPanel{margin-top:16px}.notificationItem.unread{background:#f1f6ff;border-radius:10px;padding:13px 10px;margin:4px 0}body.dark .notificationItem.unread{background:#1b2b43}.accountSubscreen{max-width:900px;margin:0 auto}.accountBackBtn{margin:0 0 12px}.customerInboxPanel .notificationPanelHead{align-items:flex-start}.customerInboxPanel .notificationPanelHead>div{min-width:0}.customerInboxPanel .notificationPanelHead p{margin:4px 0}.notificationEmpty{padding:16px 0;color:var(--muted)}.brand img{object-fit:contain}.adminNav .brand img{background:#000;border-radius:50%;object-fit:contain}@media(max-width:560px){.googleButton{min-height:46px}.customerInboxPanel .notificationPanelHead{flex-direction:column}.customerInboxPanel .notificationPanelHead button{width:100%}}
+/* Big Alien Venture fixes: show discovery controls only on the marketplace. */
+body:not(.marketplace-view) .nav .search, body:not(.marketplace-view) .cats { display:none !important; }
+/* Dark mode: keep payment/account panels and form text readable. */
+body.dark .bankBox { background:#172b46; border-color:#35577e; color:#f1f5fb; }
+body.dark .bankBox p, body.dark .bankBox b, body.dark .bankBox span { color:#f1f5fb; }
+body.dark .accountPanel, body.dark .accountPanel h3, body.dark .accountPanel h4,
+body.dark .accountPanel p, body.dark .accountPanel label, body.dark .checkout label,
+body.dark .productDetail, body.dark .productDetail p, body.dark .productDetail label,
+body.dark .cartRow, body.dark .cartRow b, body.dark .cartRow div { color:var(--ink); }
+body.dark .accountPanel hr { border:0; border-top:1px solid var(--line); }
+body.dark .addressFieldset { border-color:#3a4b65; background:#111c2d; }
+body.dark .addressFieldset legend { color:#f1f5fb; }
+body.dark .addressFieldset input, body.dark .addressFieldset select { background:#0b1220; color:#f1f5fb; border-color:#40516b; }
+.addressFieldset { min-width:0; margin:8px 0; padding:14px; border:1px solid var(--line); border-radius:14px; display:grid; gap:12px; }
+.addressFieldset legend { padding:0 8px; font-weight:800; }
+.serializedAddress { display:none !important; }
+body.dark .accountMenuRow small { color:#c0ccdc; }
+body.dark .notificationItem, body.dark .notificationText p, body.dark .notificationText small { color:#e5edf9; }
+body.dark .muted, body.dark .small { color:#bdc9da; }
+@media(max-width:560px){ .addressFieldset { padding:12px; } }
+
+/* Big Alien Venture fixes: show discovery controls only on the marketplace. */
+body:not(.marketplace-view) .nav .search, body:not(.marketplace-view) .cats { display:none !important; }
+/* Dark mode: keep payment/account panels and form text readable. */
+body.dark .bankBox { background:#172b46; border-color:#35577e; color:#f1f5fb; }
+body.dark .bankBox p, body.dark .bankBox b, body.dark .bankBox span { color:#f1f5fb; }
+body.dark .accountPanel, body.dark .accountPanel h3, body.dark .accountPanel h4,
+body.dark .accountPanel p, body.dark .accountPanel label, body.dark .checkout label,
+body.dark .productDetail, body.dark .productDetail p, body.dark .productDetail label,
+body.dark .cartRow, body.dark .cartRow b, body.dark .cartRow div { color:var(--ink); }
+body.dark .accountPanel hr { border:0; border-top:1px solid var(--line); }
+body.dark .addressFieldset { border-color:#3a4b65; background:#111c2d; }
+body.dark .addressFieldset legend { color:#f1f5fb; }
+body.dark .addressFieldset input, body.dark .addressFieldset select { background:#0b1220; color:#f1f5fb; border-color:#40516b; }
+.addressFieldset { min-width:0; margin:8px 0; padding:14px; border:1px solid var(--line); border-radius:14px; display:grid; gap:12px; }
+.addressFieldset legend { padding:0 8px; font-weight:800; }
+.serializedAddress { display:none !important; }
+body.dark .accountMenuRow small { color:#c0ccdc; }
+body.dark .notificationItem, body.dark .notificationText p, body.dark .notificationText small { color:#e5edf9; }
+body.dark .muted, body.dark .small { color:#bdc9da; }
+@media(max-width:560px){ .addressFieldset { padding:12px; } }
