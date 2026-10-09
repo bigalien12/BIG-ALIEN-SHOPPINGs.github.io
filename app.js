@@ -27,6 +27,7 @@ function saveCart() {
   $("cartCount").textContent = cart.reduce((a, x) => a + x.qty, 0);
 }
 function show(id) {
+  document.body.classList.toggle("account-area", ["profileView", "accountManagementView", "reviewsView", "supportView"].includes(id));
   [
     "authView",
     "otpView",
@@ -174,6 +175,14 @@ function prefillCheckout() {
     $("coPhone").value = profile.phone || "";
   }
 }
+function renderAccountCustomerName() {
+  const el = $("accountCustomerName");
+  if (!el) return;
+  const fullName = (profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
+  const emailName = (user?.email || "").split("@")[0];
+  el.textContent = fullName || emailName || "Welcome!";
+}
+
 async function loadProfile() {
   if (!user) return;
   let { data } = await sb
@@ -182,6 +191,7 @@ async function loadProfile() {
     .eq("id", user.id)
     .single();
   profile = data;
+  renderAccountCustomerName();
   prefillCheckout();
   $("profileName").value = data?.full_name || "";
   $("profilePhone").value = data?.phone || "";

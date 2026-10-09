@@ -24,3 +24,18 @@
 .accountBackBtn{margin:8px 0 4px}
 .accountSubscreen .accountPanel{margin:12px auto 24px}
 @media(max-width:700px){.accountSubscreen{margin:10px auto;padding:0 10px 24px}.accountSubscreen .accountPanel{padding:18px}}
+
+/* Cleaner account screens: keep the brand/logo but hide shopping header controls. */
+body.account-area .notice,
+body.account-area .search,
+body.account-area #cartBtn,
+body.account-area #accountBtn,
+body.account-area #categories{display:none!important}
+body.account-area .nav{justify-content:flex-start;min-height:72px}
+body.account-area .brand{display:flex!important}
+
+/* On account screens, keep the welcome bar but remove the customer-service number. */
+body.account-area .notice{display:block!important}
+body.account-area .notice .customer-service{display:none!important}
+
+.accountCustomerName{font-size:18px;font-weight:800;color:#f4511e;margin:4px 0 8px}
