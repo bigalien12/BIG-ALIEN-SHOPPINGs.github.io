@@ -409,8 +409,57 @@ async function init() {
     } else show("authView");
   });
 }
+// Immediate, explicit handlers for mobile navigation and account menu.
+function bindAccountAndBottomNavigation() {
+  const nav = $("bottomNav");
+  if (nav) {
+    nav.querySelectorAll("button").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const id = button.id;
+        if (button.dataset.view === "home") {
+          show("homeView");
+          renderProducts();
+        } else if (id === "bottomCategoriesBtn") {
+          show("homeView");
+          const cats = $("categories");
+          if (cats) cats.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (id === "bottomCartBtn") {
+          show("cartView");
+          renderCart();
+        } else if (id === "bottomWishlistBtn") {
+          show("wishlistView");
+          renderWishlist();
+        } else if (id === "bottomProfileBtn") {
+          show("profileView");
+          loadProfile();
+        }
+      });
+    });
+  }
+  document.querySelectorAll("[data-account-action]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const action = button.dataset.accountAction;
+      ["accountManagementPanel", "reviewsPanel", "supportPanel"].forEach((id) => $(id)?.classList.add("hidden"));
+      if (action === "orders") {
+        show("ordersView");
+        openOrders();
+        return;
+      }
+      show("profileView");
+      const panelId = action === "management" ? "accountManagementPanel" : action === "reviews" ? "reviewsPanel" : action === "support" ? "supportPanel" : null;
+      if (panelId) $(panelId)?.classList.remove("hidden");
+      if (action === "management") loadProfile();
+    });
+  });
+}
+
 document.addEventListener("click", async (e) => {
-  let t = e.target;
+  // Use the containing control when a user taps its icon or text on mobile.
+  let t = e.target.closest("button, a") || e.target;
   if (t.dataset.view === "home") {
     e.preventDefault();
     show("homeView");
@@ -640,11 +689,48 @@ function applyTheme(dark) {
 }
 applyTheme(localStorage.getItem("big_alien_dark_mode") === "1");
 if ($("darkModeToggle")) $("darkModeToggle").addEventListener("change", e => applyTheme(e.target.checked));
+const reviewPhotoInput = $("reviewPhotos");
+let selectedReviewPhotos = [];
+if (reviewPhotoInput) reviewPhotoInput.addEventListener("change", () => {
+  const files = Array.from(reviewPhotoInput.files || []);
+  const preview = $("reviewPhotoPreview");
+  if (files.length > 4) {
+    alert("Please choose no more than 4 photos.");
+    reviewPhotoInput.value = "";
+    selectedReviewPhotos = [];
+    if (preview) preview.replaceChildren();
+    return;
+  }
+  const tooLarge = files.find(file => file.size > 5 * 1024 * 1024);
+  if (tooLarge) {
+    alert("Each photo must be 5 MB or smaller.");
+    reviewPhotoInput.value = "";
+    selectedReviewPhotos = [];
+    if (preview) preview.replaceChildren();
+    return;
+  }
+  selectedReviewPhotos = files.filter(file => file.type.startsWith("image/"));
+  if (preview) {
+    preview.replaceChildren();
+    selectedReviewPhotos.forEach(file => {
+      const figure = document.createElement("figure");
+      const img = document.createElement("img");
+      img.alt = file.name;
+      img.src = URL.createObjectURL(file);
+      img.onload = () => URL.revokeObjectURL(img.src);
+      const caption = document.createElement("figcaption");
+      caption.textContent = file.name;
+      figure.append(img, caption);
+      preview.append(figure);
+    });
+  }
+});
 if ($("sendReviewBtn")) $("sendReviewBtn").onclick = () => {
   const rating = $("reviewRating").value;
   const review = $("reviewText").value.trim();
   if (!review) { alert("Please write a short review first."); return; }
-  const text = `Big Alien Venture customer review\nRating: ${rating}/5\nCustomer: ${user?.email || "Customer"}\nReview: ${review}`;
+  const photoNote = selectedReviewPhotos.length ? `\nPhotos selected: ${selectedReviewPhotos.length}. I will attach these photos in WhatsApp before sending.` : "";
+  const text = `Big Alien Venture customer review\nRating: ${rating}/5\nCustomer: ${user?.email || "Customer"}\nReview: ${review}${photoNote}`;
   window.open(`https://wa.me/2347025136166?text=${encodeURIComponent(text)}`, "_blank", "noopener");
 };
 $("productForm").onsubmit = saveProduct;
@@ -655,4 +741,5 @@ document.querySelector(".brand").addEventListener("click", (e) => {
   show("homeView");
 });
 saveCart();
+bindAccountAndBottomNavigation();
 init();

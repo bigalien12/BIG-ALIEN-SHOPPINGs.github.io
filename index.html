@@ -126,6 +126,10 @@
       <h3>Ratings &amp; Reviews</h3>
       <label for="reviewRating">Your rating</label><select id="reviewRating"><option value="5">★★★★★ — Excellent</option><option value="4">★★★★☆ — Good</option><option value="3">★★★☆☆ — Average</option><option value="2">★★☆☆☆ — Poor</option><option value="1">★☆☆☆☆ — Very poor</option></select>
       <label for="reviewText">Your review</label><textarea id="reviewText" rows="4" placeholder="Tell us about your shopping experience"></textarea>
+      <label for="reviewPhotos">Photos of the product you received (up to 4)</label>
+      <input id="reviewPhotos" type="file" accept="image/*" multiple />
+      <div id="reviewPhotoPreview" class="reviewPhotoPreview" aria-live="polite"></div>
+      <p class="small muted">After WhatsApp opens, attach the selected photos to your message before sending. Photos are not uploaded to the website automatically.</p>
       <button class="primary" type="button" id="sendReviewBtn">Send Review on WhatsApp</button>
       <p class="small muted">Your review will be sent to customer service for follow-up.</p>
     </section>
