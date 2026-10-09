@@ -18,3 +18,9 @@
 .reviewPhotoPreview figure{margin:0;width:calc(50% - 5px);max-width:160px}
 .reviewPhotoPreview img{width:100%;height:130px;object-fit:cover;border-radius:10px;border:1px solid #ddd}
 .reviewPhotoPreview figcaption{font-size:12px;overflow-wrap:anywhere}
+
+/* Account menu options open as separate screens */
+.accountSubscreen{max-width:900px;margin:18px auto;padding:0 12px 30px;min-height:65vh}
+.accountBackBtn{margin:8px 0 4px}
+.accountSubscreen .accountPanel{margin:12px auto 24px}
+@media(max-width:700px){.accountSubscreen{margin:10px auto;padding:0 10px 24px}.accountSubscreen .accountPanel{padding:18px}}

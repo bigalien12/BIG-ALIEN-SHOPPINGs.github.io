@@ -37,6 +37,9 @@ function show(id) {
     "ordersView",
     "wishlistView",
     "profileView",
+    "accountManagementView",
+    "reviewsView",
+    "supportView",
     "adminView",
   ].forEach((x) => $(x).classList.toggle("hidden", x !== id));
   const nav = $("bottomNav");
@@ -449,13 +452,20 @@ function bindAccountAndBottomNavigation() {
         openOrders();
         return;
       }
-      show("profileView");
-      const panelId = action === "management" ? "accountManagementPanel" : action === "reviews" ? "reviewsPanel" : action === "support" ? "supportPanel" : null;
-      if (panelId) $(panelId)?.classList.remove("hidden");
+      const viewId = action === "management" ? "accountManagementView" : action === "reviews" ? "reviewsView" : action === "support" ? "supportView" : null;
+      if (viewId) show(viewId);
       if (action === "management") loadProfile();
     });
   });
 }
+
+document.querySelectorAll("[data-account-back]").forEach((button) => {
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    show("profileView");
+  });
+});
 
 document.addEventListener("click", async (e) => {
   // Use the containing control when a user taps its icon or text on mobile.

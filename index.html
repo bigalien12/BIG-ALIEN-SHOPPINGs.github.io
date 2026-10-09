@@ -112,7 +112,12 @@
       <div class="accountMenuRow darkModeRow"><span class="accountMenuIcon">☾</span><span><b>Dark Screen Mode</b><small>Change the website appearance</small></span><label class="switch"><input id="darkModeToggle" type="checkbox" aria-label="Dark Screen Mode"><span class="switchSlider"></span></label></div>
       <button class="accountMenuRow logoutRow" type="button" id="logoutMenuBtn"><span class="accountMenuIcon">⇥</span><span><b>Logout</b><small>Sign out of your account</small></span><span class="chevron">›</span></button>
     </div>
-    <section id="accountManagementPanel" class="checkout accountPanel hidden">
+  </section>
+
+
+  <section id="accountManagementView" class="accountSubscreen hidden">
+    <button class="secondary accountBackBtn" type="button" data-account-back>← Back to My Account</button>
+    <section id="accountManagementPanel" class="checkout accountPanel">
       <h3>Account Management</h3>
       <form id="profileForm">
         <label>Full name<input id="profileName" required></label>
@@ -138,7 +143,10 @@
         <div id="passwordChangeMsg" class="msg" aria-live="polite"></div>
       </form>
     </section>
-    <section id="reviewsPanel" class="checkout accountPanel hidden">
+  </section>
+  <section id="reviewsView" class="accountSubscreen hidden">
+    <button class="secondary accountBackBtn" type="button" data-account-back>← Back to My Account</button>
+    <section id="reviewsPanel" class="checkout accountPanel">
       <h3>Ratings &amp; Reviews</h3>
       <label for="reviewRating">Your rating</label><select id="reviewRating"><option value="5">★★★★★ — Excellent</option><option value="4">★★★★☆ — Good</option><option value="3">★★★☆☆ — Average</option><option value="2">★★☆☆☆ — Poor</option><option value="1">★☆☆☆☆ — Very poor</option></select>
       <label for="reviewText">Your review</label><textarea id="reviewText" rows="4" placeholder="Tell us about your shopping experience"></textarea>
@@ -149,7 +157,10 @@
       <button class="primary" type="button" id="sendReviewBtn">Send Review on WhatsApp</button>
       <p class="small muted">Your review will be sent to customer service for follow-up.</p>
     </section>
-    <section id="supportPanel" class="checkout accountPanel hidden">
+  </section>
+  <section id="supportView" class="accountSubscreen hidden">
+    <button class="secondary accountBackBtn" type="button" data-account-back>← Back to My Account</button>
+    <section id="supportPanel" class="checkout accountPanel">
       <h3>Help &amp; Support</h3><p>Need help with an order or payment?</p>
       <p><a href="tel:+2347025136166">Call 07025136166</a></p>
       <p><a href="https://wa.me/2347025136166" target="_blank" rel="noopener">Chat with us on WhatsApp</a></p>
