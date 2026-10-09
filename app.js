@@ -27,10 +27,6 @@ function saveCart() {
   $("cartCount").textContent = cart.reduce((a, x) => a + x.qty, 0);
 }
 function show(id) {
-  const signedInView = !["authView", "otpView"].includes(id);
-  document.body.classList.toggle("signed-out", !signedInView);
-  const marketHeader = $("marketHeader");
-  if (marketHeader) marketHeader.classList.toggle("hidden", !signedInView);
   [
     "authView",
     "otpView",
@@ -39,14 +35,26 @@ function show(id) {
     "cartView",
     "checkoutView",
     "ordersView",
+    "wishlistView",
     "profileView",
     "adminView",
   ].forEach((x) => $(x).classList.toggle("hidden", x !== id));
+  const nav = $("bottomNav");
+  if (nav) nav.classList.toggle("hidden", id === "authView" || id === "otpView" || id === "adminView");
+  if (nav) nav.querySelectorAll("button").forEach((b) => b.classList.toggle("active", (id === "homeView" && b.dataset.view === "home") || (id === "cartView" && b.id === "bottomCartBtn") || (id === "wishlistView" && b.id === "bottomWishlistBtn") || (id === "profileView" && b.id === "bottomProfileBtn")));
 }
 function msg(id, t, ok = false) {
   $(id).textContent = t;
   $(id).style.color = ok ? "#147a32" : "#b00020";
 }
+function getWishlist() { try { return JSON.parse(localStorage.getItem(`big_alien_wishlist_${user?.id || "guest"}`) || "[]"); } catch { return []; } }
+function renderWishlist() {
+  const saved = getWishlist();
+  const items = products.filter(p => saved.includes(String(p.id)));
+  if ($("wishlistEmpty")) $("wishlistEmpty").classList.toggle("hidden", items.length > 0);
+  if ($("wishlistItems")) $("wishlistItems").innerHTML = items.map(p => `<article class="card"><img src="${esc(imageOrFallback(p.image_url))}" alt="${esc(p.name)}"><div class="cardBody"><h3>${esc(p.name)}</h3><div class="price">${money(p.price)}</div><button class="primary" data-product="${p.id}">View / Buy</button><button class="secondary" data-wishlist-remove="${p.id}">Remove</button></div></article>`).join("");
+}
+function toggleWishlist(id) { const key=`big_alien_wishlist_${user?.id || "guest"}`; let list=getWishlist(); id=String(id); list=list.includes(id)?list.filter(x=>x!==id):[...list,id]; localStorage.setItem(key,JSON.stringify(list)); renderWishlist(); }
 function imageOrFallback(url) {
   return url || "images/solar-panel.jpg";
 }
@@ -161,8 +169,9 @@ async function loadProfile() {
   prefillCheckout();
   $("profileName").value = data?.full_name || "";
   $("profilePhone").value = data?.phone || "";
-  if ($("savedAddress")) $("savedAddress").value = localStorage.getItem("big_alien_delivery_address") || "";
-  if ($("darkModeToggle")) $("darkModeToggle").checked = localStorage.getItem("big_alien_dark_mode") === "true";
+  const addressKey = `big_alien_address_${user.id}`;
+  if ($("savedAddress")) $("savedAddress").value = localStorage.getItem(addressKey) || "";
+  if ($("coAddress") && !$("coAddress").value) $("coAddress").value = localStorage.getItem(addressKey) || "";
   const adminBtn = $("adminBtn");
   if (adminBtn) adminBtn.classList.toggle("hidden", data?.role !== "admin");
 }
@@ -401,7 +410,7 @@ async function init() {
   });
 }
 document.addEventListener("click", async (e) => {
-  let t = e.target.closest("[data-view], [data-cat], [data-product], [data-minus], [data-plus], [data-remove], [data-edit], [data-delete], [data-order], [data-close], [data-auth], [data-admin-tab], #cartBtn, #accountBtn, #checkoutBtn, #adminBtn") || e.target;
+  let t = e.target;
   if (t.dataset.view === "home") {
     e.preventDefault();
     show("homeView");
@@ -413,9 +422,35 @@ document.addEventListener("click", async (e) => {
     renderProducts();
   }
   if (t.dataset.product) openProduct(t.dataset.product);
-  if (t.id === "cartBtn") {
+  if (t.dataset.wishlistRemove) { toggleWishlist(t.dataset.wishlistRemove); }
+  if (t.dataset.wishlistAdd) { toggleWishlist(t.dataset.wishlistAdd); }
+  if (t.id === "cartBtn" || t.id === "bottomCartBtn") {
     show("cartView");
     renderCart();
+  }
+  if (t.id === "bottomCategoriesBtn") {
+    show("homeView");
+    const cats = $("categories");
+    if (cats) cats.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  if (t.id === "bottomWishlistBtn") {
+    show("wishlistView");
+    renderWishlist();
+  }
+  if (t.id === "bottomOrdersBtn") {
+    show("ordersView");
+    openOrders();
+  }
+  if (t.dataset.accountAction) {
+    ["accountManagementPanel", "reviewsPanel", "supportPanel"].forEach(id => $(id)?.classList.add("hidden"));
+    if (t.dataset.accountAction === "orders") { show("ordersView"); openOrders(); }
+    if (t.dataset.accountAction === "management") $("accountManagementPanel").classList.remove("hidden");
+    if (t.dataset.accountAction === "reviews") $("reviewsPanel").classList.remove("hidden");
+    if (t.dataset.accountAction === "support") $("supportPanel").classList.remove("hidden");
+  }
+  if (t.id === "bottomProfileBtn") {
+    show("profileView");
+    loadProfile();
   }
   if (t.id === "accountBtn") {
     show("profileView");
@@ -592,10 +627,26 @@ $("profileForm").onsubmit = async (e) => {
       phone: $("profilePhone").value.trim(),
     })
     .eq("id", user.id);
+  if (!error && user) localStorage.setItem(`big_alien_address_${user.id}`, $("savedAddress").value.trim());
   msg("profileMsg", error?.message || "Profile saved.", !error);
   if (!error) loadProfile();
 };
-$("logoutBtn").onclick = () => sb.auth.signOut();
+if ($("logoutBtn")) $("logoutBtn").onclick = () => sb.auth.signOut();
+if ($("logoutMenuBtn")) $("logoutMenuBtn").onclick = () => sb.auth.signOut();
+function applyTheme(dark) {
+  document.body.classList.toggle("dark-mode", !!dark);
+  localStorage.setItem("big_alien_dark_mode", dark ? "1" : "0");
+  if ($("darkModeToggle")) $("darkModeToggle").checked = !!dark;
+}
+applyTheme(localStorage.getItem("big_alien_dark_mode") === "1");
+if ($("darkModeToggle")) $("darkModeToggle").addEventListener("change", e => applyTheme(e.target.checked));
+if ($("sendReviewBtn")) $("sendReviewBtn").onclick = () => {
+  const rating = $("reviewRating").value;
+  const review = $("reviewText").value.trim();
+  if (!review) { alert("Please write a short review first."); return; }
+  const text = `Big Alien Venture customer review\nRating: ${rating}/5\nCustomer: ${user?.email || "Customer"}\nReview: ${review}`;
+  window.open(`https://wa.me/2347025136166?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+};
 $("productForm").onsubmit = saveProduct;
 $("addProductBtn").onclick = () => openProductModal();
 $("adminLogout").onclick = () => show("homeView");
@@ -603,22 +654,5 @@ document.querySelector(".brand").addEventListener("click", (e) => {
   e.preventDefault();
   show("homeView");
 });
-// Customer settings: local-device preferences and WhatsApp feedback.
-if ($("saveAddressBtn")) $("saveAddressBtn").onclick = () => {
-  localStorage.setItem("big_alien_delivery_address", $("savedAddress").value.trim());
-  alert("Delivery address saved on this device.");
-};
-if ($("darkModeToggle")) $("darkModeToggle").onchange = () => {
-  document.body.classList.toggle("dark-mode", $("darkModeToggle").checked);
-  localStorage.setItem("big_alien_dark_mode", String($("darkModeToggle").checked));
-};
-if (localStorage.getItem("big_alien_dark_mode") === "true") document.body.classList.add("dark-mode");
-if ($("sendReviewBtn")) $("sendReviewBtn").onclick = (e) => {
-  const rating = $("reviewRating").value;
-  const feedback = $("reviewText").value.trim();
-  if (!feedback) { e.preventDefault(); alert("Please write your feedback first."); return; }
-  const message = `Big Alien Venture customer review\nRating: ${rating}/5 stars\nFeedback: ${feedback}`;
-  $("sendReviewBtn").href = "https://wa.me/2347025136166?text=" + encodeURIComponent(message);
-};
 saveCart();
 init();

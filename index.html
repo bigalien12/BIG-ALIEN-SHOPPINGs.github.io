@@ -7,12 +7,13 @@
   <link rel="icon" href="images/logo.jpg">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="signed-out">
-<header class="top market-header hidden" id="marketHeader">
+<body>
+<header class="top">
   <div class="notice">🔥 Welcome to <b>Big Alien Venture 👽</b> · Customer service: <b>07025136166</b></div>
   <div class="nav">
     <a class="brand" href="#" data-view="home">
       <img src="images/logo.jpg" alt="Big Alien Venture logo">
+      <span>BIG ALIEN</span>
     </a>
     <div class="search"><input id="search" placeholder="Search products…"><button id="searchBtn">⌕</button></div>
     <button class="iconBtn" id="cartBtn">🛒 <span id="cartCount">0</span></button>
@@ -95,26 +96,44 @@
     <div id="ordersList"></div>
   </section>
 
-  <section id="profileView" class="hidden">
-    <div class="sectionHead"><h2>My Profile</h2></div>
-    <form id="profileForm" class="checkout">
-      <label>Full name<input id="profileName" required></label>
-      <label>Phone<input id="profilePhone" required></label>
-      <button class="primary" type="submit">Save Profile</button>
-      <hr><h3>Settings</h3>
-      <label>Delivery address<textarea id="savedAddress" placeholder="Your preferred delivery address"></textarea></label>
-      <button class="secondary" id="saveAddressBtn" type="button">Save Delivery Address</button>
-      <label class="settingToggle"><input id="darkModeToggle" type="checkbox"> Use dark mode on this device</label>
-      <h3>Customer Reviews</h3>
-      <label>Rating<select id="reviewRating"><option value="5">★★★★★ — Excellent</option><option value="4">★★★★ — Good</option><option value="3">★★★ — Okay</option><option value="2">★★ — Poor</option><option value="1">★ — Very poor</option></select></label>
-      <label>Your feedback<textarea id="reviewText" placeholder="Tell us about your experience"></textarea></label>
-      <a class="primary reviewLink" id="sendReviewBtn" href="https://wa.me/2347025136166" target="_blank" rel="noopener">Send Review via WhatsApp</a>
-      <h3>Customer Service</h3><p>Call or message us on 07025136166.</p>
-      <a class="primary reviewLink" href="https://wa.me/2347025136166" target="_blank" rel="noopener">WhatsApp Customer Service</a>
-      <a class="secondary reviewLink" href="tel:+2347025136166">Call Customer Service</a>
-      <button class="secondary" id="logoutBtn" type="button">Logout</button>
-      <div id="profileMsg" class="msg"></div>
-    </form>
+  <section id="wishlistView" class="hidden">
+    <div class="sectionHead"><h2>My Wishlist</h2></div>
+    <div id="wishlistItems" class="grid"></div>
+    <div id="wishlistEmpty" class="summary">Your wishlist is empty. Save products you love to find them here.</div>
+  </section>
+
+  <section id="profileView" class="hidden accountScreen">
+    <div class="sectionHead"><div><h2>My Account</h2><p class="muted">Manage your Big Alien Venture account</p></div></div>
+    <div class="accountMenu">
+      <button class="accountMenuRow" type="button" data-account-action="support"><span class="accountMenuIcon">ⓘ</span><span><b>Help &amp; Support</b><small>Call or WhatsApp customer service</small></span><span class="chevron">›</span></button>
+      <button class="accountMenuRow" type="button" data-account-action="orders"><span class="accountMenuIcon">▣</span><span><b>Orders</b><small>Purchases and delivery status</small></span><span class="chevron">›</span></button>
+      <button class="accountMenuRow" type="button" data-account-action="reviews"><span class="accountMenuIcon">☆</span><span><b>Ratings &amp; Reviews</b><small>Share feedback about your shopping</small></span><span class="chevron">›</span></button>
+      <button class="accountMenuRow" type="button" data-account-action="management"><span class="accountMenuIcon">▤</span><span><b>Account Management</b><small>Personal details and delivery address</small></span><span class="chevron">›</span></button>
+      <div class="accountMenuRow darkModeRow"><span class="accountMenuIcon">☾</span><span><b>Dark Screen Mode</b><small>Change the website appearance</small></span><label class="switch"><input id="darkModeToggle" type="checkbox" aria-label="Dark Screen Mode"><span class="switchSlider"></span></label></div>
+      <button class="accountMenuRow logoutRow" type="button" id="logoutMenuBtn"><span class="accountMenuIcon">⇥</span><span><b>Logout</b><small>Sign out of your account</small></span><span class="chevron">›</span></button>
+    </div>
+    <section id="accountManagementPanel" class="checkout accountPanel hidden">
+      <h3>Account Management</h3>
+      <form id="profileForm">
+        <label>Full name<input id="profileName" required></label>
+        <label>Phone<input id="profilePhone" required></label>
+        <label>Saved delivery address<textarea id="savedAddress" rows="3" placeholder="Enter your delivery address"></textarea></label>
+        <button class="primary" type="submit">Save Details</button>
+        <div id="profileMsg" class="msg" aria-live="polite"></div>
+      </form>
+    </section>
+    <section id="reviewsPanel" class="checkout accountPanel hidden">
+      <h3>Ratings &amp; Reviews</h3>
+      <label for="reviewRating">Your rating</label><select id="reviewRating"><option value="5">★★★★★ — Excellent</option><option value="4">★★★★☆ — Good</option><option value="3">★★★☆☆ — Average</option><option value="2">★★☆☆☆ — Poor</option><option value="1">★☆☆☆☆ — Very poor</option></select>
+      <label for="reviewText">Your review</label><textarea id="reviewText" rows="4" placeholder="Tell us about your shopping experience"></textarea>
+      <button class="primary" type="button" id="sendReviewBtn">Send Review on WhatsApp</button>
+      <p class="small muted">Your review will be sent to customer service for follow-up.</p>
+    </section>
+    <section id="supportPanel" class="checkout accountPanel hidden">
+      <h3>Help &amp; Support</h3><p>Need help with an order or payment?</p>
+      <p><a href="tel:+2347025136166">Call 07025136166</a></p>
+      <p><a href="https://wa.me/2347025136166" target="_blank" rel="noopener">Chat with us on WhatsApp</a></p>
+    </section>
   </section>
 
   <section id="adminView" class="hidden">
@@ -147,6 +166,14 @@
 
 <div id="orderModal" class="modal hidden"><div class="modalCard"><button class="close" data-close="orderModal">×</button><div id="orderModalBody"></div></div></div>
 
+
+<nav class="bottomNav hidden" id="bottomNav" aria-label="Main navigation">
+  <button type="button" data-view="home" class="active"><span>⌂</span><small>Home</small></button>
+  <button type="button" id="bottomCategoriesBtn"><span>▦</span><small>Categories</small></button>
+  <button type="button" id="bottomCartBtn"><span>🛒</span><small>Cart</small></button>
+  <button type="button" id="bottomWishlistBtn"><span>♡</span><small>Wishlist</small></button>
+  <button type="button" id="bottomProfileBtn"><span>♙</span><small>Account</small></button>
+</nav>
 <footer>© Big Alien Venture 👽 · Customer service 07025136166</footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
