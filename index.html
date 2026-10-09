@@ -118,8 +118,24 @@
         <label>Full name<input id="profileName" required></label>
         <label>Phone<input id="profilePhone" required></label>
         <label>Saved delivery address<textarea id="savedAddress" rows="3" placeholder="Enter your delivery address"></textarea></label>
-        <button class="primary" type="submit">Save Details</button>
+        <button class="primary" type="submit">Save Personal Details</button>
         <div id="profileMsg" class="msg" aria-live="polite"></div>
+      </form>
+      <hr>
+      <h4>Change Email Address</h4>
+      <p class="small muted">A confirmation link may be sent to your new email address before the change takes effect.</p>
+      <form id="changeEmailForm">
+        <label>New email address<input id="newAccountEmail" type="email" autocomplete="email" required placeholder="new@email.com"></label>
+        <button class="primary" type="submit">Update Email</button>
+        <div id="emailChangeMsg" class="msg" aria-live="polite"></div>
+      </form>
+      <hr>
+      <h4>Change Password</h4>
+      <form id="changePasswordForm">
+        <label>New password<input id="newAccountPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="At least 6 characters"></label>
+        <label>Confirm new password<input id="confirmAccountPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="Enter the same password again"></label>
+        <button class="primary" type="submit">Update Password</button>
+        <div id="passwordChangeMsg" class="msg" aria-live="polite"></div>
       </form>
     </section>
     <section id="reviewsPanel" class="checkout accountPanel hidden">
