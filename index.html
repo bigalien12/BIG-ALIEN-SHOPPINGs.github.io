@@ -98,6 +98,13 @@
 
   <section id="ordersView" class="hidden">
     <div class="sectionHead"><h2>My Orders</h2></div>
+    <section class="notificationPanel customerNotifications" aria-labelledby="customerNotificationsTitle">
+      <div class="notificationPanelHead">
+        <h3 id="customerNotificationsTitle">🔔 Order &amp; Shipment Notifications</h3>
+        <button class="secondary" type="button" id="refreshCustomerNotifications">Refresh</button>
+      </div>
+      <div id="customerNotifications"><p class="notificationEmpty">Your order and collection updates will appear here.</p></div>
+    </section>
     <div id="ordersList"></div>
   </section>
 
@@ -173,7 +180,20 @@
   </section>
 
   <section id="adminView" class="hidden">
-    <div class="adminHead"><div><h1>👑 Big Alien Admin</h1><p>Manage products, orders, payments and shipment updates.</p></div><button class="secondary" id="adminLogout">Exit Admin</button></div>
+    <div class="adminHead">
+      <div><h1>👑 Big Alien Admin</h1><p>Manage products, orders, payments and shipment updates.</p></div>
+      <div class="adminHeadActions">
+        <button class="secondary" type="button" id="adminNotificationsBtn">🔔 Messages <span id="adminUnreadCount" class="notificationBadge">0</span></button>
+        <button class="secondary" id="adminLogout">Exit Admin</button>
+      </div>
+    </div>
+    <section id="adminNotificationsPanel" class="notificationPanel hidden" aria-labelledby="adminNotificationsTitle">
+      <div class="notificationPanelHead">
+        <h2 id="adminNotificationsTitle">Admin Notifications</h2>
+        <button class="secondary" type="button" id="refreshAdminNotifications">Refresh</button>
+      </div>
+      <div id="adminNotifications"><p class="notificationEmpty">New orders and payment reports will appear here.</p></div>
+    </section>
     <div class="adminTabs">
       <button class="active" data-admin-tab="products">Products</button>
       <button data-admin-tab="orders">Orders</button>
