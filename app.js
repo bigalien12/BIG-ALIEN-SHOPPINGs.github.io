@@ -241,6 +241,7 @@ async function submitOrder(e) {
       status: "Order received",
       message: "Your order has been received and is being processed.",
     });
+  await sendOrderEmail("new_order", o.id);
   cart = [];
   saveCart();
   msg(
@@ -252,27 +253,55 @@ async function submitOrder(e) {
 }
 async function openOrders() {
   show("ordersView");
-  let { data, error } = await sb
-    .from("orders")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error)
-    return ($("ordersList").innerHTML = `<div class="summary">${esc( error.message )}</div>`);
-  if (!data?.length)
-    return ($(
-      "ordersList"
-    ).innerHTML = `<div class="summary">No orders yet.</div>`);
+  await loadCustomerNotifications();
+  let { data, error } = await sb.from("orders").select("*").order("created_at", { ascending: false });
+  if (error) return ($("ordersList").innerHTML = `<div class="summary">${esc(error.message)}</div>`);
+  if (!data?.length) return ($("ordersList").innerHTML = `<div class="summary">No orders yet.</div>`);
   let html = "";
   for (const o of data) {
-    let { data: ups } = await sb
-      .from("shipment_updates")
-      .select("*")
-      .eq("order_id", o.id)
-      .order("created_at", { ascending: false });
-    html += `<div class="orderCard"><b>Order ${o.id.slice( 0, 8 )}</b><p>Total: ${money(o.total)} · Payment: <span class="status">${esc( o.payment_status )}</span> · Status: <span class="status">${esc( o.order_status )}</span></p><p>Tracking: ${esc( o.tracking_number || "Not assigned" )}</p><p>Delivery: ${esc(o.delivery_address)}</p><h4>Shipment updates</h4>${ (ups || []) .map( (u) => `<div>📍 <b>${esc(u.status)}</b> — ${esc( u.message )} <span class="muted">${new Date( u.created_at ).toLocaleString()}</span></div>` ) .join("") || "<div class='muted'>No shipment updates yet.</div>" }</div>`;
+    let { data: ups } = await sb.from("shipment_updates").select("*").eq("order_id", o.id).order("created_at", { ascending: false });
+    const latest = (ups || [])[0];
+    const pickup = /arrived|ready for pickup|available for pickup|at pickup point/i.test(`${o.order_status || ""} ${latest?.status || ""} ${latest?.message || ""}`);
+    html += `<div class="orderCard"><b>Order ${o.id.slice(0, 8)}</b><p>Total: ${money(o.total)} · Payment: <span class="status">${esc(o.payment_status)}</span> · Status: <span class="status">${esc(o.order_status)}</span></p><p>Tracking: ${esc(o.tracking_number || "Not assigned")}</p><p>Delivery: ${esc(o.delivery_address)}</p>${pickup ? `<div class="pickupNotice"><b>📦 Your item may be ready for collection.</b><p>${esc(latest?.message || "Please check the latest shipment details before travelling to collect it.")}</p></div>` : ""}<h4>Shipment updates</h4>${(ups || []).map(u => `<div>📍 <b>${esc(u.status)}</b> — ${esc(u.message)} <span class="muted">${new Date(u.created_at).toLocaleString()}</span></div>`).join("") || "<div class='muted'>No shipment updates yet.</div>"}</div>`;
   }
   $("ordersList").innerHTML = html;
 }
+
+async function loadCustomerNotifications() {
+  const box = $("customerNotifications");
+  if (!box || !sb || !user) return;
+  const { data, error } = await sb.from("notifications").select("id,title,message,type,order_id,read_at,created_at").eq("recipient_user_id", user.id).order("created_at", { ascending: false }).limit(30);
+  if (error) { box.innerHTML = `<p class="notificationEmpty">Notifications are not configured yet. Run the supplied database migration first.</p>`; return; }
+  if (!data?.length) { box.innerHTML = `<p class="notificationEmpty">No notifications yet. Shipment updates from the admin will appear here.</p>`; return; }
+  box.innerHTML = data.map(n => `<article class="notificationItem ${n.read_at ? "" : "unread"}"><span aria-hidden="true">${n.type === "shipment_update" ? "📦" : "🔔"}</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc(n.message)}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>`}</article>`).join("");
+}
+
+async function loadAdminNotifications() {
+  const box = $("adminNotifications");
+  if (!box || !sb || !user) return;
+  const { data, error } = await sb.from("notifications").select("id,title,message,type,order_id,read_at,created_at").eq("recipient_user_id", user.id).order("created_at", { ascending: false }).limit(50);
+  if (error) { box.innerHTML = `<p class="notificationEmpty">Notifications need the supplied database migration. ${esc(error.message)}</p>`; return; }
+  const unread = (data || []).filter(n => !n.read_at).length;
+  if ($("adminUnreadCount")) $("adminUnreadCount").textContent = String(unread);
+  if (!data?.length) { box.innerHTML = `<p class="notificationEmpty">No admin notifications yet. New orders and customer payment reports will appear here.</p>`; return; }
+  box.innerHTML = data.map(n => `<article class="notificationItem ${n.read_at ? "" : "unread"}"><span aria-hidden="true">${n.type === "new_order" ? "🛍️" : n.type === "payment_reported" ? "💳" : "🔔"}</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc(n.message)}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${n.order_id ? `<button class="secondary" type="button" data-order="${n.order_id}">Open order</button>` : ""}${n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>`}</article>`).join("");
+}
+
+async function markNotificationRead(id) {
+  const { error } = await sb.from("notifications").update({read_at: new Date().toISOString()}).eq("id", id).eq("recipient_user_id", user.id);
+  if (error) return alert(error.message);
+  await loadCustomerNotifications();
+  await loadAdminNotifications();
+}
+
+async function sendOrderEmail(event, orderId) {
+  // Email is sent by a server-side Supabase Edge Function; never put an email API key in browser code.
+  try {
+    const { error } = await sb.functions.invoke("send-order-email", { body: { event, order_id: orderId } });
+    if (error) console.warn("Email notification was not sent; check Edge Function setup:", error.message);
+  } catch (err) { console.warn("Email notification is not configured yet:", err); }
+}
+
 async function openAdmin() {
   if (!user) return;
   let { data } = await sb
@@ -287,6 +316,7 @@ async function openAdmin() {
   show("adminView");
   loadAdminProducts();
   loadAdminOrders();
+  loadAdminNotifications();
 }
 async function loadAdminProducts() {
   let { data, error } = await sb
@@ -380,7 +410,7 @@ async function manageOrder(id) {
     .select("*")
     .eq("order_id", id)
     .order("created_at", { ascending: false });
-  $("orderModalBody").innerHTML = `<h2>Manage Order ${id.slice( 0, 8 )}</h2><p>${esc(o.customer_name)} · ${esc(o.customer_phone)}</p><p>${esc( o.delivery_address )}</p><label>Payment status<select id="mPay"><option ${ o.payment_status === "pending" ? "selected" : "" }>pending</option><option ${ o.payment_status === "paid" ? "selected" : "" }>paid</option><option ${ o.payment_status === "failed" ? "selected" : "" }>failed</option><option ${ o.payment_status === "refunded" ? "selected" : "" }>refunded</option></select></label><label>Shipment status<select id="mStatus">${[ "processing", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled", ] .map( (s) => `<option ${o.order_status === s ? "selected" : ""}>${s}</option>` ) .join( "" )}</select></label><label>Tracking number<input id="mTrack" value="${esc( o.tracking_number || "" )}"></label><label>Shipment message<textarea id="mMessage" placeholder="e.g. Package has left Abuja sorting centre"></textarea></label><label>Location<input id="mLocation" placeholder="e.g. Abuja"></label><button class="primary" id="saveOrder">Save Update</button><h3>History</h3>${( ups || [] ) .map( (u) => `<div>📍 <b>${esc(u.status)}</b> — ${esc(u.message)} (${new Date( u.created_at ).toLocaleString()})</div>` ) .join("")}`;
+  $("orderModalBody").innerHTML = `<h2>Manage Order ${id.slice( 0, 8 )}</h2><p>${esc(o.customer_name)} · ${esc(o.customer_phone)}</p><p>${esc( o.delivery_address )}</p><label>Payment status<select id="mPay"><option ${ o.payment_status === "pending" ? "selected" : "" }>pending</option><option ${ o.payment_status === "paid" ? "selected" : "" }>paid</option><option ${ o.payment_status === "failed" ? "selected" : "" }>failed</option><option ${ o.payment_status === "refunded" ? "selected" : "" }>refunded</option></select></label><label>Shipment status<select id="mStatus">${[ "processing", "confirmed", "shipped", "out_for_delivery", "ready_for_collection", "delivered", "cancelled", ] .map( (s) => `<option ${o.order_status === s ? "selected" : ""}>${s}</option>` ) .join( "" )}</select></label><label>Tracking number<input id="mTrack" value="${esc( o.tracking_number || "" )}"></label><label>Shipment message<textarea id="mMessage" placeholder="e.g. Package has left Abuja sorting centre"></textarea></label><label>Location<input id="mLocation" placeholder="e.g. Abuja"></label><button class="primary" id="saveOrder">Save Update</button><h3>History</h3>${( ups || [] ) .map( (u) => `<div>📍 <b>${esc(u.status)}</b> — ${esc(u.message)} (${new Date( u.created_at ).toLocaleString()})</div>` ) .join("")}`;
   $("saveOrder").onclick = async () => {
     let pay = $("mPay").value,
       status = $("mStatus").value,
@@ -394,18 +424,18 @@ async function manageOrder(id) {
       })
       .eq("id", id);
     if (error) return alert(error.message);
-    if ($("mMessage").value.trim()) {
-      await sb
-        .from("shipment_updates")
-        .insert({
-          order_id: id,
-          status,
-          message: $("mMessage").value.trim(),
-          location: $("mLocation").value.trim() || null,
-        });
-    }
+    const shipmentMessage = $("mMessage").value.trim() || `Shipment status updated to ${status.replaceAll("_", " ")}.`;
+    const { error: shipmentError } = await sb.from("shipment_updates").insert({
+      order_id: id,
+      status,
+      message: shipmentMessage,
+      location: $("mLocation").value.trim() || null,
+    });
+    if (shipmentError) return alert(`Order saved, but shipment notification could not be created: ${shipmentError.message}`);
+    await sendOrderEmail("shipment_update", id);
     $("orderModal").classList.add("hidden");
-    loadAdminOrders();
+    await loadAdminOrders();
+    await loadAdminNotifications();
   };
   $("orderModal").classList.remove("hidden");
 }
@@ -426,6 +456,14 @@ async function init() {
     show("homeView");
     await loadProducts();
   } else show("authView");
+  sb.channel("bav-order-notifications").on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
+    const n = payload.new;
+    if (n?.recipient_user_id === user?.id) {
+      loadCustomerNotifications();
+      loadAdminNotifications();
+      if ("Notification" in window && Notification.permission === "granted") new Notification(n.title || "Big Alien Venture", { body: n.message || "Your order has an update." });
+    }
+  }).subscribe();
   sb.auth.onAuthStateChange(async (_e, s) => {
     user = s?.user || null;
     if (user) {
@@ -497,6 +535,11 @@ document.querySelectorAll("[data-account-back]").forEach((button) => {
 document.addEventListener("click", async (e) => {
   // Use the containing control when a user taps its icon or text on mobile.
   let t = e.target.closest("button, a") || e.target;
+  if (t.dataset.readNotification) {
+    e.preventDefault();
+    await markNotificationRead(t.dataset.readNotification);
+    return;
+  }
   if (t.dataset.view === "home") {
     e.preventDefault();
     show("homeView");
@@ -579,6 +622,7 @@ document.addEventListener("click", async (e) => {
   }
   if (t.dataset.delete) deleteProduct(t.dataset.delete);
   if (t.dataset.order) manageOrder(t.dataset.order);
+  if (t.dataset.readNotification) markNotificationRead(t.dataset.readNotification);
   if (t.dataset.close) $(t.dataset.close).classList.add("hidden");
   if (t.dataset.auth) {
     document
@@ -717,6 +761,9 @@ $("profileForm").onsubmit = async (e) => {
   msg("profileMsg", error?.message || "Profile saved.", !error);
   if (!error) loadProfile();
 };
+if ($("adminNotificationsBtn")) $("adminNotificationsBtn").onclick = async () => { const panel = $("adminNotificationsPanel"); panel.classList.toggle("hidden"); await loadAdminNotifications(); };
+if ($("refreshAdminNotifications")) $("refreshAdminNotifications").onclick = loadAdminNotifications;
+if ($("refreshCustomerNotifications")) $("refreshCustomerNotifications").onclick = loadCustomerNotifications;
 if ($("logoutBtn")) $("logoutBtn").onclick = () => sb.auth.signOut();
 if ($("logoutMenuBtn")) $("logoutMenuBtn").onclick = () => sb.auth.signOut();
 function applyTheme(dark) {
@@ -780,3 +827,12 @@ document.querySelector(".brand").addEventListener("click", (e) => {
 saveCart();
 bindAccountAndBottomNavigation();
 init();
+
+// Refresh the admin notification badge while the admin dashboard is open.
+setInterval(() => {
+  const adminView = $("adminView");
+  if (user && adminView && !adminView.classList.contains("hidden")) {
+    loadAdminNotifications();
+  }
+}, 30000);
+
