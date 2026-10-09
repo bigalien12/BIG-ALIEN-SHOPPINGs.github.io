@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="./pwa-icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="theme-color" content="#080a08">
+  <meta name="theme-color" content="#075bea">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Big Alien Venture">
   <link rel="stylesheet" href="styles.css">
@@ -17,7 +17,7 @@
   <div class="notice">🔥 Welcome to <b>Big Alien Venture 👽</b></div>
   <div class="nav">
     <a class="brand" href="#" data-view="home">
-      <img src="images/logo.jpg" alt="Big Alien Venture logo">
+      <img src="images/logo.png" alt="Big Alien Venture logo">
       <span>BIG ALIEN</span>
     </a>
     <div class="search"><input id="search" placeholder="Search products…"><button id="searchBtn">⌕</button></div>
@@ -30,7 +30,7 @@
 <main>
   <section id="authView" class="screen">
     <div class="authCard">
-      <img class="authLogo" src="images/logo.jpg" alt="Big Alien Venture">
+      <img class="authLogo" src="images/logo.png" alt="Big Alien Venture">
       <h1>Welcome to Big Alien Venture 👽</h1>
       <p>Sign in or create your customer account to enter the marketplace.</p>
       <div class="tabs"><button class="active" data-auth="login">Login</button><button data-auth="signup">Create Account</button></div>
@@ -53,7 +53,7 @@
 
   <section id="otpView" class="screen hidden">
     <div class="authCard otpCard">
-      <img class="authLogo" src="images/logo.jpg" alt="Big Alien Venture">
+      <img class="authLogo" src="images/logo.png" alt="Big Alien Venture">
       <h1>Verify your email</h1>
       <p>We sent a 6-digit code to <b id="otpEmail">customer@email.com</b></p>
       <form id="otpForm">
@@ -105,7 +105,7 @@
       </div>
       <div id="customerNotifications"><p class="notificationEmpty">Your order and collection updates will appear here.</p></div>
     </section>
-    <div id="ordersList"></div>
+    <div class="orderStatusTabs" role="tablist" aria-label="Order status"><button class="active" type="button" data-order-filter="ongoing">Ongoing / Delivered</button><button type="button" data-order-filter="cancelled">Cancelled / Returned</button></div><div id="ordersList"></div>
   </section>
 
   <section id="wishlistView" class="hidden">

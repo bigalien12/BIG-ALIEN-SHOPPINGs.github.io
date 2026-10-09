@@ -1,13 +1,17 @@
-GITHUB PAGES FIXED BUILD
+ABELSHOP UPDATED WEBSITE PACKAGE
 
-Customer:
-- First visit: Create account.
-- Returning visit: Sign in.
-- After login: products, product details, Buy Now, cart, checkout and My Orders.
+Included:
+- index.html and app.js (customer marketplace, customer stock labels, order-status tabs)
+- styles.css (responsive blue-and-white styling)
+- admin.html, admin.js, admin.css (admin product and shipment management)
+- config.js (existing browser-safe Supabase project configuration)
+- logo assets and manifest files
 
-Owner:
-- Owner/Admin is visible on the first screen.
-- First-time owner setup creates the owner account in this browser.
-- Owner can manage products and customer orders.
+IMPORTANT:
+1. Upload the contents of this folder to the same GitHub Pages repository, replacing the matching files.
+2. Do not delete your existing Supabase database or change table policies.
+3. This package does not include a Supabase database migration; existing notifications depend on the database functions/tables already configured.
+4. Confirm images, storage bucket, and product image URLs are present in your repository/Supabase. Product cards use stored image_url values and a fallback path.
+5. Test login, signup, admin access, product editing, order placement, and notifications after deployment.
 
-Important: GitHub Pages is static. This prototype stores accounts/products/orders in browser localStorage. A real public store needs a backend/database for secure owner-only access, cross-device accounts, real payments and shipment synchronization.
+The customer UI now displays only In Stock / Out of Stock, never the stock count. Admin stock quantities remain visible in the dashboard.

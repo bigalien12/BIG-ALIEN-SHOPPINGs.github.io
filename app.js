@@ -137,7 +137,7 @@ function renderProducts() {
     ? list
         .map(
           (p) =>
-            `<article class="card"><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc( p.name )}"><div class="cardBody"><div class="muted">${esc( p.category )}</div><h3>${esc(p.name)}</h3><div class="price">${money( p.price )}</div><div class="muted">${ p.stock > 0 ? p.stock + " in stock" : "Out of stock" }</div><button class="primary" data-product="${p.id}" ${ p.stock < 1 ? "disabled" : "" }>View / Buy</button></div></article>`
+            `<article class="card"><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc( p.name )}"><div class="cardBody"><div class="muted">${esc( p.category )}</div><h3>${esc(p.name)}</h3><div class="price">${money( p.price )}</div><div class="stockBadge ${p.stock > 0 ? "inStock" : "outStock"}">${p.stock > 0 ? "● In Stock" : "Out of Stock"}</div><button class="primary" data-product="${p.id}" ${ p.stock < 1 ? "disabled" : "" }>View / Buy</button></div></article>`
         )
         .join("")
     : `<div class="summary"><h3>No products found</h3><p>Try another category or search.</p></div>`;
@@ -164,7 +164,7 @@ function openProduct(id) {
   let p = productById(id);
   if (!p) return;
   show("productView");
-  $("productView").innerHTML = `<div class="productDetail"><div><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc(p.name)}"></div><div><div class="muted">${esc( p.category )}</div><h1>${esc(p.name)}</h1><div class="price">${money( p.price )}</div><p>${esc(p.description)}</p><p>${ p.stock } available</p><label>Quantity<input id="buyQty" type="number" min="1" max="${ p.stock }" value="1"></label><button class="primary" id="addToCart">Add to Cart</button><button class="secondary" id="buyNow">Buy Now</button></div></div>`;
+  $("productView").innerHTML = `<div class="productDetail"><div><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc(p.name)}"></div><div><div class="muted">${esc( p.category )}</div><h1>${esc(p.name)}</h1><div class="price">${money( p.price )}</div><p>${esc(p.description)}</p><div class="stockBadge ${p.stock > 0 ? "inStock" : "outStock"}">${p.stock > 0 ? "● In Stock" : "Out of Stock"}</div><label>Quantity<input id="buyQty" type="number" min="1" max="${ p.stock }" value="1"></label><button class="primary" id="addToCart" ${p.stock < 1 ? "disabled" : ""}>🛒 Add to Cart</button><button class="secondary" id="buyNow" ${p.stock < 1 ? "disabled" : ""}>Buy Now</button></div></div>`;
   $("addToCart").onclick = () => {
     let q = Number($("buyQty").value);
     addCart(p, q);
@@ -477,6 +477,15 @@ async function openOrders() {
     html += `<div class="orderCard"><b>Order ${o.id.slice( 0, 8 )}</b><p>Total: ${money(o.total)} · Payment: <span class="status">${esc( o.payment_status )}</span> · Status: <span class="status">${esc( o.order_status )}</span></p><p>Tracking: ${esc( o.tracking_number || "Not assigned" )}</p><p>Delivery: ${esc(o.delivery_address)}</p>${ pickup ? `<div class="pickupNotice"><b>📦 Your item may be ready for collection.</b><p>${esc( latest?.message || "Please check the latest shipment details before travelling to collect it." )}</p></div>` : "" }<h4>Shipment updates</h4>${ (ups || []) .map( (u) => `<div>📍 <b>${esc(u.status)}</b> — ${esc( u.message )} <span class="muted">${new Date( u.created_at ).toLocaleString()}</span></div>` ) .join("") || "<div class='muted'>No shipment updates yet.</div>" }</div>`;
   }
   $("ordersList").innerHTML = html;
+  applyOrderFilter("ongoing");
+} 
+function applyOrderFilter(filter) {
+  document.querySelectorAll("[data-order-filter]").forEach(b => b.classList.toggle("active", b.dataset.orderFilter === filter));
+  document.querySelectorAll("#ordersList .orderCard").forEach(card => {
+    const status = (card.querySelector(".status")?.textContent || "").toLowerCase();
+    const cancelled = /cancel|return|refund/.test(card.textContent.toLowerCase());
+    card.classList.toggle("hidden", filter === "cancelled" ? !cancelled : cancelled);
+  });
 }
 
 async function loadCustomerNotifications() {
@@ -923,6 +932,7 @@ document.addEventListener("click", async (e) => {
     $("loginForm").classList.toggle("hidden", t.dataset.auth !== "login");
     $("signupForm").classList.toggle("hidden", t.dataset.auth !== "signup");
   }
+  if (t.dataset.orderFilter) applyOrderFilter(t.dataset.orderFilter);
   if (t.dataset.adminTab) {
     $("adminProductsTab").classList.toggle(
       "hidden",
