@@ -41,10 +41,23 @@ function show(id) {
     "reviewsView",
     "supportView",
     "adminView",
-  ].forEach((x) => $(x).classList.toggle("hidden", x !== id));
+  ].forEach((viewId) => {
+    const view = $(viewId);
+    if (view) view.classList.toggle("hidden", viewId !== id);
+  });
   const nav = $("bottomNav");
-  if (nav) nav.classList.toggle("hidden", id === "authView" || id === "otpView" || id === "adminView");
-  if (nav) nav.querySelectorAll("button").forEach((b) => b.classList.toggle("active", (id === "homeView" && b.dataset.view === "home") || (id === "cartView" && b.id === "bottomCartBtn") || (id === "wishlistView" && b.id === "bottomWishlistBtn") || (id === "profileView" && b.id === "bottomProfileBtn")));
+  if (nav) {
+    nav.classList.toggle("hidden", ["authView", "otpView", "adminView"].includes(id));
+    nav.querySelectorAll("button").forEach((button) => {
+      button.classList.toggle(
+        "active",
+        (id === "homeView" && button.dataset.view === "home") ||
+        (["profileView", "accountManagementView", "reviewsView", "supportView"].includes(id) && button.id === "bottomProfileBtn") ||
+        (id === "cartView" && button.id === "bottomCartBtn") ||
+        (id === "wishlistView" && button.id === "bottomWishlistBtn")
+      );
+    });
+  }
 }
 function msg(id, t, ok = false) {
   $(id).textContent = t;
@@ -446,14 +459,17 @@ function bindAccountAndBottomNavigation() {
       event.preventDefault();
       event.stopPropagation();
       const action = button.dataset.accountAction;
-      ["accountManagementPanel", "reviewsPanel", "supportPanel"].forEach((id) => $(id)?.classList.add("hidden"));
       if (action === "orders") {
         show("ordersView");
         openOrders();
+        window.scrollTo({ top: 0, behavior: "auto" });
         return;
       }
       const viewId = action === "management" ? "accountManagementView" : action === "reviews" ? "reviewsView" : action === "support" ? "supportView" : null;
-      if (viewId) show(viewId);
+      if (viewId) {
+        show(viewId);
+        window.scrollTo({ top: 0, behavior: "auto" });
+      }
       if (action === "management") loadProfile();
     });
   });
@@ -464,6 +480,7 @@ document.querySelectorAll("[data-account-back]").forEach((button) => {
     event.preventDefault();
     event.stopPropagation();
     show("profileView");
+    window.scrollTo({ top: 0, behavior: "auto" });
   });
 });
 
