@@ -298,7 +298,6 @@ async function reportCheckoutPayment() {
     .insert({
       user_id: user.id,
       order_id: null,
-      payment_method: "bank_transfer",
       amount,
       customer_note: "Customer tapped I Have Paid before placing the order.",
       status: "reported",
@@ -311,24 +310,16 @@ async function reportCheckoutPayment() {
     return;
   }
   sessionStorage.setItem(key, report.id);
-  // Attempt admin dashboard alerts. If RLS blocks this, the report is still stored and the SQL policy/backend needs configuring.
-  const { data: admins, error: adminError } = await sb
-    .from("profiles")
-    .select("id")
-    .eq("role", "admin");
-  let notificationError = adminError;
-  if (admins?.length) {
-    const result = await sb.from("notifications").insert(
-      admins.map((a) => ({
-        recipient_user_id: a.id,
-        title: "Customer reported payment",
-        message: `${$("coName").value.trim()} (${ user.email || "no email" }) reports a transfer of ${money( amount )}. Check Moniepoint before confirming.`,
-        type: "payment_reported",
-        order_id: null,
-      }))
-    );
-    notificationError = result.error;
-  }
+  // Secure server-side RPC creates admin notifications without exposing admin notification permissions.
+  const { error: notificationError } = await sb.rpc(
+    "notify_admins_checkout_event",
+    {
+      p_title: "Customer reported payment",
+      p_message: `${$("coName").value.trim()} (${ user.email || "no email" }) reports a transfer of ${money( amount )}. Check Moniepoint before confirming.`,
+      p_type: "payment_reported",
+      p_order_id: null,
+    }
+  );
   await sendOrderEmail("payment_reported", null);
   if (submit) {
     submit.hidden = false;
@@ -433,30 +424,19 @@ async function submitOrder(e) {
       "Order created but payment report could not be linked:",
       linkError.message
     );
-  await sb
-    .from("shipment_updates")
-    .insert({
-      order_id: o.id,
-      status: "Order received",
-      message: "Order received; payment awaits admin verification.",
-    });
-  const { data: admins } = await sb
-    .from("profiles")
-    .select("id")
-    .eq("role", "admin");
-  if (admins?.length) {
-    const { error: notifyError } = await sb.from("notifications").insert(
-      admins.map((a) => ({
-        recipient_user_id: a.id,
-        title: "New order placed",
-        message: `Order ${o.id.slice(0, 8)}: ${$("coName").value.trim()} · ${$( "coPhone" ).value.trim()} · ${money(total)}. Payment is awaiting verification.`,
-        type: "new_order",
-        order_id: o.id,
-      }))
-    );
-    if (notifyError)
-      console.warn("Admin new-order notification failed:", notifyError.message);
-  }
+  await sb.from("shipment_updates").insert({
+    order_id: o.id,
+    status: "Order received",
+    message: "Order received; payment awaits admin verification.",
+  });
+  const { error: notifyError } = await sb.rpc("notify_admins_checkout_event", {
+    p_title: "New order placed",
+    p_message: `Order ${o.id.slice(0, 8)}: ${$("coName").value.trim()} · ${$( "coPhone" ).value.trim()} · ${money(total)}. Payment is awaiting verification.`,
+    p_type: "new_order",
+    p_order_id: o.id,
+  });
+  if (notifyError)
+    console.warn("Admin new-order notification failed:", notifyError.message);
   await sendOrderEmail("new_order", o.id);
   sessionStorage.removeItem(reportKey);
   cart = [];
