@@ -39,3 +39,9 @@ body.account-area .notice{display:block!important}
 body.account-area .notice .customer-service{display:none!important}
 
 .accountCustomerName{font-size:18px;font-weight:800;color:#f4511e;margin:4px 0 8px}
+
+
+/* Persistent in-app order/shipment notifications */
+.adminHeadActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.notificationBadge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;margin-left:4px;border-radius:99px;background:#f4511e;color:#fff;font-size:12px}.notificationPanel{margin:0 20px 18px;padding:16px;background:#fff;border:1px solid #e7e7e7;border-radius:14px}.notificationPanelHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.notificationPanelHead h2,.notificationPanelHead h3{margin:4px 0 12px}.notificationItem{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-top:1px solid #eee}.notificationItem.unread{background:#fff8f2;margin:0 -8px;padding:12px 8px;border-radius:8px}.notificationItem .notificationText{flex:1;min-width:0}.notificationItem p{margin:4px 0;line-height:1.4}.notificationItem small{color:#777}.notificationItem button{white-space:nowrap}.notificationEmpty{padding:12px 0;color:#777}.customerNotifications{margin:0 20px 16px}.dark-mode .notificationPanel{background:#222;color:#f3f3f3;border-color:#393939}.dark-mode .notificationItem{border-top-color:#393939}.dark-mode .notificationItem.unread{background:#33271f}@media(max-width:700px){.notificationPanel,.customerNotifications{margin:10px;padding:13px}.adminHeadActions{width:100%}.adminHead{flex-wrap:wrap}}
+
+.pickupNotice{margin:12px 0;padding:14px;border:1px solid #9dd4aa;border-radius:12px;background:#effbf1;color:#174b25}.pickupNotice p{margin:6px 0 0}.dark-mode .pickupNotice{background:#18301e;color:#d7f7de;border-color:#3d7950}
