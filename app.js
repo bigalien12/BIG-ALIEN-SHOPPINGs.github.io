@@ -27,10 +27,15 @@ function saveCart() {
   $("cartCount").textContent = cart.reduce((a, x) => a + x.qty, 0);
 }
 function show(id) {
-  document.body.classList.toggle("marketplace-view", id === "homeView");
   document.body.classList.toggle(
     "account-area",
-    ["profileView", "customerInboxView", "accountManagementView", "reviewsView", "supportView"].includes(id)
+    [
+      "profileView",
+      "customerInboxView",
+      "accountManagementView",
+      "reviewsView",
+      "supportView",
+    ].includes(id)
   );
   [
     "authView",
@@ -135,7 +140,7 @@ function renderProducts() {
     ? list
         .map(
           (p) =>
-            `<article class="card"><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc( p.name )}"><div class="cardBody"><div class="muted">${esc( p.category )}</div><h3>${esc(p.name)}</h3><div class="price">${money( p.price )}</div><div class="stockBadge ${p.stock > 0 ? "inStock" : "outStock"}">${p.stock > 0 ? "● In Stock" : "Out of Stock"}</div><button class="primary" data-product="${p.id}" ${ p.stock < 1 ? "disabled" : "" }>View / Buy</button></div></article>`
+            `<article class="card"><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc( p.name )}"><div class="cardBody"><div class="muted">${esc( p.category )}</div><h3>${esc(p.name)}</h3><div class="price">${money( p.price )}</div><div class="stockBadge ${ p.stock > 0 ? "inStock" : "outStock" }">${ p.stock > 0 ? "● In Stock" : "Out of Stock" }</div><button class="primary" data-product="${p.id}" ${ p.stock < 1 ? "disabled" : "" }>View / Buy</button></div></article>`
         )
         .join("")
     : `<div class="summary"><h3>No products found</h3><p>Try another category or search.</p></div>`;
@@ -156,13 +161,13 @@ async function loadProducts() {
   renderProducts();
 }
 function productById(id) {
-  return products.find((p) => p.id === id);
+  return products.find((p) => String(p.id) === String(id));
 }
 function openProduct(id) {
   let p = productById(id);
   if (!p) return;
   show("productView");
-  $("productView").innerHTML = `<div class="productDetail"><div><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc(p.name)}"></div><div><div class="muted">${esc( p.category )}</div><h1>${esc(p.name)}</h1><div class="price">${money( p.price )}</div><p>${esc(p.description)}</p><div class="stockBadge ${p.stock > 0 ? "inStock" : "outStock"}">${p.stock > 0 ? "● In Stock" : "Out of Stock"}</div><label>Quantity<input id="buyQty" type="number" min="1" max="${ p.stock }" value="1"></label><button class="primary" id="addToCart" ${p.stock < 1 ? "disabled" : ""}>🛒 Add to Cart</button><button class="secondary" id="buyNow" ${p.stock < 1 ? "disabled" : ""}>Buy Now</button></div></div>`;
+  $("productView").innerHTML = `<div class="productDetail"><div><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc(p.name)}"></div><div><div class="muted">${esc( p.category )}</div><h1>${esc(p.name)}</h1><div class="price">${money( p.price )}</div><p>${esc(p.description)}</p><div class="stockBadge ${ p.stock > 0 ? "inStock" : "outStock" }">${ p.stock > 0 ? "● In Stock" : "Out of Stock" }</div><label>Quantity<input id="buyQty" type="number" min="1" max="${ p.stock }" value="1"></label><button class="primary" id="addToCart" ${ p.stock < 1 ? "disabled" : "" }>🛒 Add to Cart</button><button class="secondary" id="buyNow" ${ p.stock < 1 ? "disabled" : "" }>Buy Now</button></div></div>`;
   $("addToCart").onclick = () => {
     let q = Number($("buyQty").value);
     addCart(p, q);
@@ -176,25 +181,44 @@ function openProduct(id) {
     prefillCheckout();
   };
 }
+function productStock(p, fallback = 0) {
+  const raw = p?.stock ?? fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+}
 function addCart(p, q) {
+  if (!p) return;
   q = Math.max(1, Math.floor(Number(q) || 1));
-
-  let x = cart.find((item) => String(item.id) === String(p.id));
-  const stock = Math.max(0, Number(p.stock) || 0);
-
+  const stock = productStock(p);
+  if (stock < 1) {
+    alert(
+      "This product is currently out of stock. Please contact the store owner."
+    );
+    return;
+  }
+  const x = cart.find((item) => String(item.id) === String(p.id));
+  const currentQty = x ? Math.max(0, Number(x.qty) || 0) : 0;
+  const requestedQty = currentQty + q;
+  if (requestedQty > stock) {
+    alert(`Only ${stock} unit(s) of this product are currently available.`);
+  }
+  const allowedQty = Math.min(stock, requestedQty);
   if (x) {
-    x.qty = Math.min(stock, x.qty + q);
+    x.qty = allowedQty;
+    x.stock = stock;
+    x.price = Number(p.price ?? x.price) || 0;
+    x.name = p.name || x.name;
+    x.image_url = p.image_url || x.image_url;
   } else {
     cart.push({
       id: p.id,
       qty: Math.min(stock, q),
       name: p.name,
-      price: p.price,
+      price: Number(p.price) || 0,
       image_url: p.image_url,
-      stock: stock
+      stock,
     });
   }
-
   saveCart();
   renderCart();
 }
@@ -206,14 +230,30 @@ function renderCart() {
     $("cartSummary").innerHTML = "";
     return;
   }
+  // Refresh each cart row's stock from the latest loaded product record.
+  cart = cart.map((item) => {
+    const product = productById(item.id);
+    const stock = product
+      ? productStock(product, item.stock)
+      : productStock(item, 0);
+    return { ...item, qty: Math.max(1, Number(item.qty) || 1), stock };
+  });
   $("cartItems").innerHTML = cart
-    .map(
-      (x) =>
-        `<div class="cartRow"><img src="${esc( imageOrFallback(x.image_url) )}"><div style="flex:1"><b>${esc(x.name)}</b><div>${money(x.price)} × ${ x.qty }</div></div><button class="secondary" data-minus="${ x.id }">−</button><b>${x.qty}</b><button class="secondary" data-plus="${ x.id }">+</button><button class="danger" data-remove="${ x.id }">Remove</button></div>`
-    )
+    .map((item) => {
+      const stock = productStock(item, 0);
+      const qty = Math.min(
+        stock || Number(item.qty) || 1,
+        Number(item.qty) || 1
+      );
+      return `<div class="cartRow"><img src="${esc( imageOrFallback(item.image_url) )}" alt="${esc( item.name )}"><div class="cartProductInfo" style="flex:1;min-width:100px"><b>${esc( item.name )}</b><div>${money( item.price )} × ${qty}</div><small class="muted">${stock} available</small></div><button class="secondary" type="button" data-minus="${esc( item.id )}" aria-label="Decrease ${esc(item.name)} quantity" ${ qty <= 1 ? "disabled" : "" }>−</button><b aria-label="Quantity">${qty}</b><button class="secondary" type="button" data-plus="${esc( item.id )}" aria-label="Increase ${esc(item.name)} quantity" ${ stock <= qty ? "" : "" }>+</button><button class="danger" type="button" data-remove="${esc( item.id )}">Remove</button></div>`;
+    })
     .join("");
-  let total = cart.reduce((a, x) => a + x.price * x.qty, 0);
-  $("cartSummary").innerHTML = `<h3>Total: ${money( total )}</h3><button class="primary" id="checkoutBtn">Proceed to Checkout</button>`;
+  const total = cart.reduce(
+    (sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 0),
+    0
+  );
+  $("cartSummary").innerHTML = `<h3>Total: ${money( total )}</h3><button class="primary" id="checkoutBtn" type="button">Proceed to Checkout</button>`;
+  saveCart();
 }
 function checkoutReportKey() {
   const cartKey = cart
@@ -338,45 +378,12 @@ async function reportCheckoutPayment() {
     : "Payment report sent. Place Order is now available. The store must still verify the transfer.";
   reportButton.disabled = false;
 }
-const ADDRESS_FIELDS = ["Country", "State", "Lga", "City", "Street", "Building", "Landmark", "Postal"];
-function setAddressFields(prefix, rawAddress) {
-  const values = {};
-  String(rawAddress || "").split("\n").forEach((line) => {
-    const ix = line.indexOf(":");
-    if (ix > 0) values[line.slice(0, ix).trim().toLowerCase()] = line.slice(ix + 1).trim();
-  });
-  const map = { Country: "country", State: "state", Lga: "lga", City: "city/town", Street: "street", Building: "house/building", Landmark: "landmark", Postal: "postal code" };
-  ADDRESS_FIELDS.forEach((field) => {
-    const el = $(prefix + field);
-    if (el && values[map[field]]) el.value = values[map[field]];
-  });
-  // Support addresses saved before the structured address form was introduced.
-  if (rawAddress && !String(rawAddress).includes("Country:")) {
-    const city = $(prefix + "City");
-    if (city && !city.value) city.value = String(rawAddress).trim();
-  }
-}
-function getAddressText(prefix) {
-  const values = [
-    ["Country", $(prefix + "Country")?.value], ["State", $(prefix + "State")?.value],
-    ["LGA", $(prefix + "Lga")?.value], ["City/Town", $(prefix + "City")?.value],
-    ["Street", $(prefix + "Street")?.value], ["House/Building", $(prefix + "Building")?.value],
-    ["Landmark", $(prefix + "Landmark")?.value], ["Postal code", $(prefix + "Postal")?.value]
-  ].filter(([, value]) => String(value || "").trim());
-  return values.map(([key, value]) => `${key}: ${String(value).trim()}`).join("\n");
-}
-function syncAddressText(prefix, hiddenId) {
-  const hidden = $(hiddenId);
-  if (hidden) hidden.value = getAddressText(prefix);
-}
 function prefillCheckout() {
   setupCheckoutPaymentGate();
   if (profile) {
     $("coName").value = profile.full_name || "";
     $("coPhone").value = profile.phone || "";
   }
-  if (user) setAddressFields("co", localStorage.getItem(`big_alien_address_${user.id}`) || "");
-  syncAddressText("co", "coAddress");
 }
 function renderAccountCustomerName() {
   const el = $("accountCustomerName");
@@ -404,16 +411,10 @@ async function loadProfile() {
   $("profileName").value = data?.full_name || "";
   $("profilePhone").value = data?.phone || "";
   const addressKey = `big_alien_address_${user.id}`;
-  const savedAddress = localStorage.getItem(addressKey) || "";
-  if ($("savedAddress")) {
-    $("savedAddress").value = savedAddress;
-    setAddressFields("profile", savedAddress);
-    syncAddressText("profile", "savedAddress");
-  }
-  if ($("coAddress")) {
-    if (!$("coAddress").value) setAddressFields("co", savedAddress);
-    syncAddressText("co", "coAddress");
-  }
+  if ($("savedAddress"))
+    $("savedAddress").value = localStorage.getItem(addressKey) || "";
+  if ($("coAddress") && !$("coAddress").value)
+    $("coAddress").value = localStorage.getItem(addressKey) || "";
   const adminBtn = $("adminBtn");
   if (adminBtn) adminBtn.classList.toggle("hidden", data?.role !== "admin");
 }
@@ -524,13 +525,24 @@ async function openOrders() {
   }
   $("ordersList").innerHTML = html;
   applyOrderFilter("ongoing");
-} 
+}
 function applyOrderFilter(filter) {
-  document.querySelectorAll("[data-order-filter]").forEach(b => b.classList.toggle("active", b.dataset.orderFilter === filter));
-  document.querySelectorAll("#ordersList .orderCard").forEach(card => {
-    const status = (card.querySelector(".status")?.textContent || "").toLowerCase();
-    const cancelled = /cancel|return|refund/.test(card.textContent.toLowerCase());
-    card.classList.toggle("hidden", filter === "cancelled" ? !cancelled : cancelled);
+  document
+    .querySelectorAll("[data-order-filter]")
+    .forEach((b) =>
+      b.classList.toggle("active", b.dataset.orderFilter === filter)
+    );
+  document.querySelectorAll("#ordersList .orderCard").forEach((card) => {
+    const status = (
+      card.querySelector(".status")?.textContent || ""
+    ).toLowerCase();
+    const cancelled = /cancel|return|refund/.test(
+      card.textContent.toLowerCase()
+    );
+    card.classList.toggle(
+      "hidden",
+      filter === "cancelled" ? !cancelled : cancelled
+    );
   });
 }
 
@@ -569,16 +581,19 @@ async function loadCustomerInbox() {
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) {
-    box.innerHTML = `<p class="notificationEmpty">Inbox is not available yet. Please check that the notifications database migration has been applied. ${esc(error.message)}</p>`;
+    box.innerHTML = `<p class="notificationEmpty">Inbox is not available yet. Please check that the notifications database migration has been applied. ${esc( error.message )}</p>`;
     return;
   }
   if (!data?.length) {
     box.innerHTML = `<p class="notificationEmpty">Your inbox is empty. Order and shipment messages from the store will appear here.</p>`;
     return;
   }
-  box.innerHTML = data.map((n) =>
-    `<article class="notificationItem ${n.read_at ? "" : "unread"}"><span aria-hidden="true">${n.type === "shipment_update" ? "📦" : "🔔"}</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc(n.message)}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>`}</article>`
-  ).join("");
+  box.innerHTML = data
+    .map(
+      (n) =>
+        `<article class="notificationItem ${ n.read_at ? "" : "unread" }"><span aria-hidden="true">${ n.type === "shipment_update" ? "📦" : "🔔" }</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc( n.message )}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${ n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>` }</article>`
+    )
+    .join("");
 }
 
 async function loadAdminNotifications() {
@@ -979,16 +994,27 @@ document.addEventListener("click", async (e) => {
     }
   }
   if (t.dataset.plus) {
-    const x = cart.find((item) => String(item.id) === String(t.dataset.plus));
-    const p = products.find((item) => String(item.id) === String(t.dataset.plus));
-    const stock = Number(p?.stock ?? x?.stock ?? 999999);
-    if (x && x.qty < stock) {
-      x.qty += 1;
-      if (p) x.stock = Number(p.stock || 0);
-      saveCart();
-      renderCart();
-    } else if (x) {
-      alert("You have reached the available stock for this product.");
+    const item = cart.find((row) => String(row.id) === String(t.dataset.plus));
+    const product = productById(t.dataset.plus);
+    if (item) {
+      const stock = product
+        ? productStock(product, item.stock)
+        : productStock(item, 0);
+      const currentQty = Math.max(1, Number(item.qty) || 1);
+      if (stock < 1) {
+        alert(
+          "Stock information is unavailable for this product. Please refresh the marketplace or contact the store owner."
+        );
+      } else if (currentQty >= stock) {
+        alert(
+          `You have reached the available stock (${stock}) for this product. The store owner must update the product stock if more units are available.`
+        );
+      } else {
+        item.qty = currentQty + 1;
+        item.stock = stock;
+        saveCart();
+        renderCart();
+      }
     }
   }
   if (t.dataset.remove) {
@@ -1045,21 +1071,32 @@ $("loginForm").onsubmit = async (e) => {
 };
 async function signInWithGoogle() {
   if (!sb) {
-    msg("authMsg", "Google sign-in is unavailable until Supabase is configured.");
+    msg(
+      "authMsg",
+      "Google sign-in is unavailable until Supabase is configured."
+    );
     return;
   }
   const button = $("googleAuthBtn");
-  if (button) { button.disabled = true; button.textContent = "Connecting to Google…"; }
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Connecting to Google…";
+  }
   const { error } = await sb.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: window.location.href.split("#")[0].split("?")[0] }
+    options: { redirectTo: window.location.origin + window.location.pathname },
   });
   if (error) {
     msg("authMsg", error.message);
-    if (button) { button.disabled = false; button.innerHTML = '<span class="googleG" aria-hidden="true">G</span> Continue with Google'; }
+    if (button) {
+      button.disabled = false;
+      button.innerHTML =
+        '<span class="googleG" aria-hidden="true">G</span> Continue with Google';
+    }
   }
 }
-if ($("googleAuthBtn")) $("googleAuthBtn").addEventListener("click", signInWithGoogle);
+if ($("googleAuthBtn"))
+  $("googleAuthBtn").addEventListener("click", signInWithGoogle);
 let pendingOtpEmail = "",
   otpTimer = null;
 function startOtpTimer(seconds = 60) {
@@ -1150,14 +1187,9 @@ $("search").oninput = () => {
   query = $("search").value;
   renderProducts();
 };
-$("checkoutForm").onsubmit = (e) => {
-  syncAddressText("co", "coAddress");
-  if (!$ ("coAddress").value.trim()) { e.preventDefault(); return msg("checkoutMsg", "Please complete your delivery address."); }
-  submitOrder(e);
-};
+$("checkoutForm").onsubmit = submitOrder;
 $("profileForm").onsubmit = async (e) => {
   e.preventDefault();
-  syncAddressText("profile", "savedAddress");
   let { error } = await sb
     .from("profiles")
     .update({
@@ -1192,12 +1224,9 @@ function applyTheme(dark) {
 }
 applyTheme(localStorage.getItem("big_alien_dark_mode") === "1");
 if ($("darkModeToggle"))
-  $("darkModeToggle").addEventListener("change", (e) => applyTheme(e.target.checked));
-["profile", "co"].forEach((prefix) => ADDRESS_FIELDS.forEach((field) => {
-  const el = $(prefix + field);
-  if (el) el.addEventListener("input", () => syncAddressText(prefix, prefix === "profile" ? "savedAddress" : "coAddress"));
-  if (el) el.addEventListener("change", () => syncAddressText(prefix, prefix === "profile" ? "savedAddress" : "coAddress"));
-}));
+  $("darkModeToggle").addEventListener("change", (e) =>
+    applyTheme(e.target.checked)
+  );
 const reviewPhotoInput = $("reviewPhotos");
 let selectedReviewPhotos = [];
 if (reviewPhotoInput)
