@@ -178,18 +178,25 @@ function openProduct(id) {
 }
 function addCart(p, q) {
   q = Math.max(1, Math.floor(Number(q) || 1));
-  let x = cart.find((x) => String(x.id) === String(p.id));
-  if (x) x.qty = Math.min(Number(p.stock || 0), x.qty + q);
-  else
+
+  let x = cart.find((item) => String(item.id) === String(p.id));
+  const stock = Math.max(0, Number(p.stock) || 0);
+
+  if (x) {
+    x.qty = Math.min(stock, x.qty + q);
+  } else {
     cart.push({
       id: p.id,
-      qty: q,
+      qty: Math.min(stock, q),
       name: p.name,
       price: p.price,
       image_url: p.image_url,
-      stock: Number(p.stock || 0),
+      stock: stock
     });
+  }
+
   saveCart();
+  renderCart();
 }
 function renderCart() {
   if (!cart.length) {
