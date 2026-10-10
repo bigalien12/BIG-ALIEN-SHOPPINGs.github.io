@@ -46,3 +46,13 @@ body.dark .accountMenuRow small { color:#c0ccdc; }
 body.dark .notificationItem, body.dark .notificationText p, body.dark .notificationText small { color:#e5edf9; }
 body.dark .muted, body.dark .small { color:#bdc9da; }
 @media(max-width:560px){ .addressFieldset { padding:12px; } }
+
+/* Page-level back button: shown only on customer pages other than Marketplace. */
+.pageBackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-weight: 750;
+}
+

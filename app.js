@@ -26,7 +26,30 @@ function saveCart() {
   localStorage.setItem("big_alien_cart", JSON.stringify(cart));
   $("cartCount").textContent = cart.reduce((a, x) => a + x.qty, 0);
 }
-function show(id) {
+let currentView = null;
+const viewHistory = [];
+
+function show(id, remember = true) {
+  // A deliberate return to the marketplace starts a fresh customer navigation path.
+  if (id === "homeView" && remember) viewHistory.length = 0;
+  if (remember && currentView && currentView !== id) {
+    viewHistory.push(currentView);
+    // Keep history bounded during long shopping sessions.
+    if (viewHistory.length > 50) viewHistory.shift();
+  }
+  currentView = id;
+
+  // The search field and category strip should appear only on the marketplace.
+  document.body.classList.toggle("marketplace-view", id === "homeView");
+
+  const pageBackBtn = $("pageBackBtn");
+  if (pageBackBtn) {
+    pageBackBtn.classList.toggle(
+      "hidden",
+      ["homeView", "authView", "otpView", "adminView"].includes(id)
+    );
+  }
+
   document.body.classList.toggle(
     "account-area",
     [
@@ -140,7 +163,7 @@ function renderProducts() {
     ? list
         .map(
           (p) =>
-            `<article class="card"><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc( p.name )}"><div class="cardBody"><div class="muted">${esc( p.category )}</div><h3>${esc(p.name)}</h3><div class="price">${money( p.price )}</div><div class="stockBadge ${ p.stock > 0 ? "inStock" : "outStock" }">${ p.stock > 0 ? "● In Stock" : "Out of Stock" }</div><button class="primary" data-product="${p.id}" ${ p.stock < 1 ? "disabled" : "" }>View / Buy</button></div></article>`
+            `<article class="card"><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc( p.name )}"><div class="cardBody"><div class="muted">${esc( p.category )}</div><h3>${esc(p.name)}</h3><div class="price">${money( p.price )}</div><div class="stockBadge ${p.stock > 0 ? "inStock" : "outStock"}">${p.stock > 0 ? "● In Stock" : "Out of Stock"}</div><button class="primary" data-product="${p.id}" ${ p.stock < 1 ? "disabled" : "" }>View / Buy</button></div></article>`
         )
         .join("")
     : `<div class="summary"><h3>No products found</h3><p>Try another category or search.</p></div>`;
@@ -167,7 +190,7 @@ function openProduct(id) {
   let p = productById(id);
   if (!p) return;
   show("productView");
-  $("productView").innerHTML = `<div class="productDetail"><div><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc(p.name)}"></div><div><div class="muted">${esc( p.category )}</div><h1>${esc(p.name)}</h1><div class="price">${money( p.price )}</div><p>${esc(p.description)}</p><div class="stockBadge ${ p.stock > 0 ? "inStock" : "outStock" }">${ p.stock > 0 ? "● In Stock" : "Out of Stock" }</div><label>Quantity<input id="buyQty" type="number" min="1" max="${ p.stock }" value="1"></label><button class="primary" id="addToCart" ${ p.stock < 1 ? "disabled" : "" }>🛒 Add to Cart</button><button class="secondary" id="buyNow" ${ p.stock < 1 ? "disabled" : "" }>Buy Now</button></div></div>`;
+  $("productView").innerHTML = `<div class="productDetail"><div><img src="${esc( imageOrFallback(p.image_url) )}" alt="${esc(p.name)}"></div><div><div class="muted">${esc( p.category )}</div><h1>${esc(p.name)}</h1><div class="price">${money( p.price )}</div><p>${esc(p.description)}</p><div class="stockBadge ${p.stock > 0 ? "inStock" : "outStock"}">${p.stock > 0 ? "● In Stock" : "Out of Stock"}</div><label>Quantity<input id="buyQty" type="number" min="1" max="${ p.stock }" value="1"></label><button class="primary" id="addToCart" ${p.stock < 1 ? "disabled" : ""}>🛒 Add to Cart</button><button class="secondary" id="buyNow" ${p.stock < 1 ? "disabled" : ""}>Buy Now</button></div></div>`;
   $("addToCart").onclick = () => {
     let q = Number($("buyQty").value);
     addCart(p, q);
@@ -191,9 +214,7 @@ function addCart(p, q) {
   q = Math.max(1, Math.floor(Number(q) || 1));
   const stock = productStock(p);
   if (stock < 1) {
-    alert(
-      "This product is currently out of stock. Please contact the store owner."
-    );
+    alert("This product is currently out of stock. Please contact the store owner.");
     return;
   }
   const x = cart.find((item) => String(item.id) === String(p.id));
@@ -224,35 +245,23 @@ function addCart(p, q) {
 }
 function renderCart() {
   if (!cart.length) {
-    $(
-      "cartItems"
-    ).innerHTML = `<div class="summary"><h3>Your cart is empty.</h3></div>`;
+    $("cartItems").innerHTML = `<div class="summary"><h3>Your cart is empty.</h3></div>`;
     $("cartSummary").innerHTML = "";
     return;
   }
   // Refresh each cart row's stock from the latest loaded product record.
   cart = cart.map((item) => {
     const product = productById(item.id);
-    const stock = product
-      ? productStock(product, item.stock)
-      : productStock(item, 0);
+    const stock = product ? productStock(product, item.stock) : productStock(item, 0);
     return { ...item, qty: Math.max(1, Number(item.qty) || 1), stock };
   });
-  $("cartItems").innerHTML = cart
-    .map((item) => {
-      const stock = productStock(item, 0);
-      const qty = Math.min(
-        stock || Number(item.qty) || 1,
-        Number(item.qty) || 1
-      );
-      return `<div class="cartRow"><img src="${esc( imageOrFallback(item.image_url) )}" alt="${esc( item.name )}"><div class="cartProductInfo" style="flex:1;min-width:100px"><b>${esc( item.name )}</b><div>${money( item.price )} × ${qty}</div><small class="muted">${stock} available</small></div><button class="secondary" type="button" data-minus="${esc( item.id )}" aria-label="Decrease ${esc(item.name)} quantity" ${ qty <= 1 ? "disabled" : "" }>−</button><b aria-label="Quantity">${qty}</b><button class="secondary" type="button" data-plus="${esc( item.id )}" aria-label="Increase ${esc(item.name)} quantity" ${ stock <= qty ? "" : "" }>+</button><button class="danger" type="button" data-remove="${esc( item.id )}">Remove</button></div>`;
-    })
-    .join("");
-  const total = cart.reduce(
-    (sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 0),
-    0
-  );
-  $("cartSummary").innerHTML = `<h3>Total: ${money( total )}</h3><button class="primary" id="checkoutBtn" type="button">Proceed to Checkout</button>`;
+  $("cartItems").innerHTML = cart.map((item) => {
+    const stock = productStock(item, 0);
+    const qty = Math.min(stock || Number(item.qty) || 1, Number(item.qty) || 1);
+    return `<div class="cartRow"><img src="${esc(imageOrFallback(item.image_url))}" alt="${esc(item.name)}"><div class="cartProductInfo" style="flex:1;min-width:100px"><b>${esc(item.name)}</b><div>${money(item.price)} × ${qty}</div><small class="muted">${stock} available</small></div><button class="secondary" type="button" data-minus="${esc(item.id)}" aria-label="Decrease ${esc(item.name)} quantity" ${qty <= 1 ? "disabled" : ""}>−</button><b aria-label="Quantity">${qty}</b><button class="secondary" type="button" data-plus="${esc(item.id)}" aria-label="Increase ${esc(item.name)} quantity" ${stock <= qty ? "" : ""}>+</button><button class="danger" type="button" data-remove="${esc(item.id)}">Remove</button></div>`;
+  }).join("");
+  const total = cart.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 0), 0);
+  $("cartSummary").innerHTML = `<h3>Total: ${money(total)}</h3><button class="primary" id="checkoutBtn" type="button">Proceed to Checkout</button>`;
   saveCart();
 }
 function checkoutReportKey() {
@@ -525,24 +534,13 @@ async function openOrders() {
   }
   $("ordersList").innerHTML = html;
   applyOrderFilter("ongoing");
-}
+} 
 function applyOrderFilter(filter) {
-  document
-    .querySelectorAll("[data-order-filter]")
-    .forEach((b) =>
-      b.classList.toggle("active", b.dataset.orderFilter === filter)
-    );
-  document.querySelectorAll("#ordersList .orderCard").forEach((card) => {
-    const status = (
-      card.querySelector(".status")?.textContent || ""
-    ).toLowerCase();
-    const cancelled = /cancel|return|refund/.test(
-      card.textContent.toLowerCase()
-    );
-    card.classList.toggle(
-      "hidden",
-      filter === "cancelled" ? !cancelled : cancelled
-    );
+  document.querySelectorAll("[data-order-filter]").forEach(b => b.classList.toggle("active", b.dataset.orderFilter === filter));
+  document.querySelectorAll("#ordersList .orderCard").forEach(card => {
+    const status = (card.querySelector(".status")?.textContent || "").toLowerCase();
+    const cancelled = /cancel|return|refund/.test(card.textContent.toLowerCase());
+    card.classList.toggle("hidden", filter === "cancelled" ? !cancelled : cancelled);
   });
 }
 
@@ -581,19 +579,16 @@ async function loadCustomerInbox() {
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) {
-    box.innerHTML = `<p class="notificationEmpty">Inbox is not available yet. Please check that the notifications database migration has been applied. ${esc( error.message )}</p>`;
+    box.innerHTML = `<p class="notificationEmpty">Inbox is not available yet. Please check that the notifications database migration has been applied. ${esc(error.message)}</p>`;
     return;
   }
   if (!data?.length) {
     box.innerHTML = `<p class="notificationEmpty">Your inbox is empty. Order and shipment messages from the store will appear here.</p>`;
     return;
   }
-  box.innerHTML = data
-    .map(
-      (n) =>
-        `<article class="notificationItem ${ n.read_at ? "" : "unread" }"><span aria-hidden="true">${ n.type === "shipment_update" ? "📦" : "🔔" }</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc( n.message )}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${ n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>` }</article>`
-    )
-    .join("");
+  box.innerHTML = data.map((n) =>
+    `<article class="notificationItem ${n.read_at ? "" : "unread"}"><span aria-hidden="true">${n.type === "shipment_update" ? "📦" : "🔔"}</span><div class="notificationText"><b>${esc(n.title)}</b><p>${esc(n.message)}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>${n.read_at ? "" : `<button class="secondary" type="button" data-read-notification="${n.id}">Mark read</button>`}</article>`
+  ).join("");
 }
 
 async function loadAdminNotifications() {
@@ -900,6 +895,24 @@ function bindAccountAndBottomNavigation() {
   });
 }
 
+const pageBackBtn = $("pageBackBtn");
+if (pageBackBtn) {
+  pageBackBtn.addEventListener("click", () => {
+    const previousView = viewHistory.pop();
+    const targetView =
+      previousView ||
+      (user ? "homeView" : "authView");
+    show(targetView, false);
+    window.scrollTo({ top: 0, behavior: "auto" });
+
+    if (targetView === "homeView") renderProducts();
+    if (targetView === "cartView") renderCart();
+    if (targetView === "wishlistView") renderWishlist();
+    if (targetView === "ordersView") openOrders();
+    if (targetView === "profileView") loadProfile();
+  });
+}
+
 document.querySelectorAll("[data-account-back]").forEach((button) => {
   button.addEventListener("click", (event) => {
     event.preventDefault();
@@ -997,18 +1010,12 @@ document.addEventListener("click", async (e) => {
     const item = cart.find((row) => String(row.id) === String(t.dataset.plus));
     const product = productById(t.dataset.plus);
     if (item) {
-      const stock = product
-        ? productStock(product, item.stock)
-        : productStock(item, 0);
+      const stock = product ? productStock(product, item.stock) : productStock(item, 0);
       const currentQty = Math.max(1, Number(item.qty) || 1);
       if (stock < 1) {
-        alert(
-          "Stock information is unavailable for this product. Please refresh the marketplace or contact the store owner."
-        );
+        alert("Stock information is unavailable for this product. Please refresh the marketplace or contact the store owner.");
       } else if (currentQty >= stock) {
-        alert(
-          `You have reached the available stock (${stock}) for this product. The store owner must update the product stock if more units are available.`
-        );
+        alert(`You have reached the available stock (${stock}) for this product. The store owner must update the product stock if more units are available.`);
       } else {
         item.qty = currentQty + 1;
         item.stock = stock;
@@ -1071,32 +1078,21 @@ $("loginForm").onsubmit = async (e) => {
 };
 async function signInWithGoogle() {
   if (!sb) {
-    msg(
-      "authMsg",
-      "Google sign-in is unavailable until Supabase is configured."
-    );
+    msg("authMsg", "Google sign-in is unavailable until Supabase is configured.");
     return;
   }
   const button = $("googleAuthBtn");
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Connecting to Google…";
-  }
+  if (button) { button.disabled = true; button.textContent = "Connecting to Google…"; }
   const { error } = await sb.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: window.location.origin + window.location.pathname },
+    options: { redirectTo: window.location.origin + window.location.pathname }
   });
   if (error) {
     msg("authMsg", error.message);
-    if (button) {
-      button.disabled = false;
-      button.innerHTML =
-        '<span class="googleG" aria-hidden="true">G</span> Continue with Google';
-    }
+    if (button) { button.disabled = false; button.innerHTML = '<span class="googleG" aria-hidden="true">G</span> Continue with Google'; }
   }
 }
-if ($("googleAuthBtn"))
-  $("googleAuthBtn").addEventListener("click", signInWithGoogle);
+if ($("googleAuthBtn")) $("googleAuthBtn").addEventListener("click", signInWithGoogle);
 let pendingOtpEmail = "",
   otpTimer = null;
 function startOtpTimer(seconds = 60) {
